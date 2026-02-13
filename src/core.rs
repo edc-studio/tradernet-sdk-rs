@@ -122,6 +122,49 @@ impl Core {
         Ok(result)
     }
 
+    pub fn authorized_get_request(
+        &self,
+        path: &str,
+        params: Option<&[(String, String)]>,
+        version: Option<u8>,
+    ) -> Result<reqwest::blocking::Response, TradernetError> {
+        let public = self.public.as_ref().ok_or(TradernetError::MissingKeypair)?;
+        let private = self.private.as_ref().ok_or(TradernetError::MissingKeypair)?;
+
+        let version = version.unwrap_or(2);
+        if version != 2 && version != 3 {
+            return Err(TradernetError::UnsupportedApiVersion(version));
+        }
+
+        let timestamp = current_timestamp();
+        let message = format!("{timestamp}");
+
+        let mut headers = HeaderMap::new();
+        if let Ok(value) = HeaderValue::from_str(public) {
+            headers.insert("X-NtApi-PublicKey", value);
+        }
+        if let Ok(value) = HeaderValue::from_str(&timestamp) {
+            headers.insert("X-NtApi-Timestamp", value);
+        }
+        if let Ok(value) = HeaderValue::from_str(&sign(private, &message)) {
+            headers.insert("X-NtApi-Sig", value);
+        }
+
+        let url = format!("{}{}", Self::url(), path);
+        debug!("Sending GET to {url}");
+        self.net.request(Method::GET, &url, Some(headers), params, None)
+    }
+
+    pub fn get_request(
+        &self,
+        path: &str,
+        params: Option<&[(String, String)]>,
+    ) -> Result<reqwest::blocking::Response, TradernetError> {
+        let url = format!("{}{}", Self::url(), path);
+        debug!("Sending GET to {url}");
+        self.net.request(Method::GET, &url, None, params, None)
+    }
+
     pub fn list_security_sessions(&self) -> Result<Value, TradernetError> {
         self.authorized_request("getSecuritySessions", None, Some(2))
     }

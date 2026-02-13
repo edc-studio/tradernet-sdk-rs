@@ -18,4 +18,6 @@ pub enum TradernetError {
     Websocket(#[from] tokio_tungstenite::tungstenite::Error),
     #[error("url parse error: {0}")]
     Url(#[from] url::ParseError),
+    #[error("zip error: {0}")]
+    Zip(#[from] zip::result::ZipError),
 }

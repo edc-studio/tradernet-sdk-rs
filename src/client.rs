@@ -1,7 +1,11 @@
 use crate::core::Core;
 use crate::errors::TradernetError;
-use chrono::{DateTime, Local, NaiveDateTime};
+use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, NaiveTime};
+use regex::Regex;
 use serde_json::{Map, Value};
+use std::collections::HashMap;
+use std::io::Read;
+use zip::ZipArchive;
 
 pub struct Tradernet {
     core: Core,
@@ -28,6 +32,47 @@ impl Tradernet {
         self.core.authorized_request("GetAllUserTexInfo", None, Some(2))
     }
 
+    pub fn new_user(
+        &self,
+        login: &str,
+        reception: impl ToString,
+        phone: &str,
+        lastname: &str,
+        firstname: &str,
+        password: Option<&str>,
+        utm_campaign: Option<&str>,
+        tariff: Option<i64>,
+    ) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("login".to_string(), Value::String(login.to_string()));
+        params.insert("pwd".to_string(), Value::String(password.unwrap_or_default().to_string()));
+        params.insert("reception".to_string(), Value::String(reception.to_string()));
+        params.insert("phone".to_string(), Value::String(phone.to_string()));
+        params.insert("lastname".to_string(), Value::String(lastname.to_string()));
+        params.insert("firstname".to_string(), Value::String(firstname.to_string()));
+        if let Some(tariff) = tariff {
+            params.insert("tariff_id".to_string(), Value::Number(tariff.into()));
+        }
+        if let Some(utm_campaign) = utm_campaign {
+            params.insert("utm_campaign".to_string(), Value::String(utm_campaign.to_string()));
+        }
+
+        self.core.plain_request("registerNewUser", Some(params))
+    }
+
+    pub fn check_missing_fields(&self, step: i64, office: &str) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("step".to_string(), Value::Number(step.into()));
+        params.insert("office".to_string(), Value::String(office.to_string()));
+        self.core.authorized_request("checkStep", Some(params), Some(2))
+    }
+
+    pub fn get_profile_fields(&self, reception: i64) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("reception".to_string(), Value::Number(reception.into()));
+        self.core.authorized_request("getProfileFields", Some(params), Some(2))
+    }
+
     pub fn get_user_data(&self) -> Result<Value, TradernetError> {
         self.core.authorized_request("getOPQ", None, Some(2))
     }
@@ -39,6 +84,48 @@ impl Tradernet {
             params.insert("mode".to_string(), Value::String(mode.to_string()));
         }
         self.core.authorized_request("getMarketStatus", Some(params), Some(2))
+    }
+
+    pub fn get_most_traded(
+        &self,
+        instrument_type: &str,
+        exchange: &str,
+        gainers: bool,
+        limit: i64,
+    ) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("type".to_string(), Value::String(instrument_type.to_string()));
+        params.insert("exchange".to_string(), Value::String(exchange.to_string()));
+        params.insert("gainers".to_string(), Value::Number((gainers as i64).into()));
+        params.insert("limit".to_string(), Value::Number(limit.into()));
+        self.core.plain_request("getTopSecurities", Some(params))
+    }
+
+    pub fn export_securities<I, S>(
+        &self,
+        symbols: I,
+        fields: Option<&[&str]>,
+    ) -> Result<Value, TradernetError>
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        let symbols = symbols.into_iter().map(|s| s.as_ref().to_string()).collect::<Vec<_>>();
+        let mut results = Vec::new();
+
+        for chunk in symbols.chunks(Core::MAX_EXPORT_SIZE) {
+            let mut params = Vec::new();
+            if let Some(fields) = fields {
+                params.push(("params".to_string(), fields.join(" ")));
+            }
+            params.push(("tickers".to_string(), chunk.join(" ")));
+
+            let response = self.core.get_request("/securities/export", Some(&params))?;
+            let mut result: Vec<Value> = response.json()?;
+            results.append(&mut result);
+        }
+
+        Ok(Value::Array(results))
     }
 
     pub fn security_info(&self, symbol: &str, sup: bool) -> Result<Value, TradernetError> {
@@ -97,6 +184,220 @@ impl Tradernet {
         self.core.authorized_request("getStockQuotesJson", Some(params), Some(2))
     }
 
+    pub fn get_trades_history(
+        &self,
+        start: NaiveDate,
+        end: NaiveDate,
+        trade_id: Option<i64>,
+        limit: Option<i64>,
+        symbol: Option<&str>,
+        currency: Option<&str>,
+    ) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("beginDate".to_string(), Value::String(start.to_string()));
+        params.insert("endDate".to_string(), Value::String(end.to_string()));
+        if let Some(trade_id) = trade_id {
+            params.insert("tradeId".to_string(), Value::Number(trade_id.into()));
+        }
+        if let Some(limit) = limit {
+            params.insert("max".to_string(), Value::Number(limit.into()));
+        }
+        if let Some(symbol) = symbol {
+            params.insert("nt_ticker".to_string(), Value::String(symbol.to_string()));
+        }
+        if let Some(currency) = currency {
+            params.insert("curr".to_string(), Value::String(currency.to_string()));
+        }
+        self.core.authorized_request("getTradesHistory", Some(params), Some(2))
+    }
+
+    pub fn find_symbol(&self, symbol: &str, exchange: Option<&str>) -> Result<Value, TradernetError> {
+        let text = match exchange {
+            Some(exchange) => format!("{symbol}@{exchange}"),
+            None => symbol.to_string(),
+        };
+        let mut params = Map::new();
+        params.insert("text".to_string(), Value::String(text));
+        self.core.plain_request("tickerFinder", Some(params))
+    }
+
+    pub fn get_news(
+        &self,
+        query: &str,
+        symbol: Option<&str>,
+        story_id: Option<&str>,
+        limit: i64,
+    ) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("searchFor".to_string(), Value::String(query.to_string()));
+        if let Some(symbol) = symbol {
+            params.insert("ticker".to_string(), Value::String(symbol.to_string()));
+        }
+        if let Some(story_id) = story_id {
+            params.insert("storyId".to_string(), Value::String(story_id.to_string()));
+        }
+        params.insert("limit".to_string(), Value::Number(limit.into()));
+        self.core.authorized_request("getNews", Some(params), Some(2))
+    }
+
+    pub fn get_all(
+        &self,
+        mut filters: Option<HashMap<String, Value>>,
+        show_expired: bool,
+    ) -> Result<Value, TradernetError> {
+        let mut filters = filters.take().unwrap_or_default();
+        if !show_expired {
+            filters.insert("istrade".to_string(), Value::Number(1.into()));
+        }
+
+        let market_code = filters
+            .get("mkt_short_code")
+            .and_then(|value| value.as_str())
+            .map(|value| value.to_string());
+
+        let refbook = self.get_refbook(market_code.as_deref())?;
+        let filtered = refbook
+            .into_iter()
+            .filter(|symbol: &Map<String, Value>| {
+                filters.iter().all(|(field, expected)| symbol.get(field) == Some(expected))
+            })
+            .map(Value::Object)
+            .collect::<Vec<Value>>();
+
+        Ok(Value::Array(filtered))
+    }
+
+    pub fn account_summary(&self) -> Result<Value, TradernetError> {
+        self.core.authorized_request("getPositionJson", None, Some(2))
+    }
+
+    pub fn get_price_alerts(&self, symbol: Option<&str>) -> Result<Value, TradernetError> {
+        let params = symbol.map(|symbol| {
+            let mut params = Map::new();
+            params.insert("ticker".to_string(), Value::String(symbol.to_string()));
+            params
+        });
+        self.core.authorized_request("getAlertsList", params, Some(2))
+    }
+
+    pub fn add_price_alert<I, S>(
+        &self,
+        symbol: &str,
+        price: I,
+        trigger_type: &str,
+        quote_type: &str,
+        send_to: &str,
+        frequency: i64,
+        expire: i64,
+    ) -> Result<Value, TradernetError>
+    where
+        I: IntoIterator<Item = S>,
+        S: ToString,
+    {
+        let prices = price.into_iter().map(|value| Value::String(value.to_string())).collect::<Vec<_>>();
+        let mut params = Map::new();
+        params.insert("ticker".to_string(), Value::String(symbol.to_string()));
+        params.insert("price".to_string(), Value::Array(prices));
+        params.insert("trigger_type".to_string(), Value::String(trigger_type.to_string()));
+        params.insert("quote_type".to_string(), Value::String(quote_type.to_string()));
+        params.insert("notification_type".to_string(), Value::String(send_to.to_string()));
+        params.insert("alert_period".to_string(), Value::Number(frequency.into()));
+        params.insert("expire".to_string(), Value::Number(expire.into()));
+        self.core.authorized_request("addPriceAlert", Some(params), Some(2))
+    }
+
+    pub fn delete_price_alert(&self, alert_id: i64) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("id".to_string(), Value::Number(alert_id.into()));
+        params.insert("del".to_string(), Value::Bool(true));
+        self.core.authorized_request("addPriceAlert", Some(params), Some(2))
+    }
+
+    pub fn get_requests_history(
+        &self,
+        doc_id: Option<i64>,
+        exec_id: Option<i64>,
+        start: DateTime<Local>,
+        end: DateTime<Local>,
+        limit: Option<i64>,
+        offset: Option<i64>,
+        status: Option<i64>,
+    ) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("date_from".to_string(), Value::String(start.format("%Y-%m-%dT%H:%M:%S").to_string()));
+        params.insert("date_to".to_string(), Value::String(end.format("%Y-%m-%dT%H:%M:%S").to_string()));
+        if let Some(doc_id) = doc_id {
+            params.insert("cpsDocId".to_string(), Value::Number(doc_id.into()));
+        }
+        if let Some(exec_id) = exec_id {
+            params.insert("id".to_string(), Value::Number(exec_id.into()));
+        }
+        if let Some(limit) = limit {
+            params.insert("limit".to_string(), Value::Number(limit.into()));
+        }
+        if let Some(offset) = offset {
+            params.insert("offset".to_string(), Value::Number(offset.into()));
+        }
+        if let Some(status) = status {
+            params.insert("cps_status".to_string(), Value::Number(status.into()));
+        }
+        self.core.authorized_request("getClientCpsHistory", Some(params), Some(2))
+    }
+
+    pub fn get_order_files(&self, order_id: Option<i64>, internal_id: Option<i64>) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        if let Some(internal_id) = internal_id {
+            params.insert("internal_id".to_string(), Value::Number(internal_id.into()));
+        } else if let Some(order_id) = order_id {
+            params.insert("id".to_string(), Value::Number(order_id.into()));
+        } else {
+            return Err(TradernetError::InvalidInput(
+                "Either order_id or internal_id must be specified".to_string(),
+            ));
+        }
+        self.core.authorized_request("getCpsFiles", Some(params), Some(2))
+    }
+
+    pub fn get_broker_report(
+        &self,
+        start: NaiveDate,
+        end: NaiveDate,
+        period: NaiveTime,
+        data_block_type: Option<&str>,
+    ) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("date_start".to_string(), Value::String(start.to_string()));
+        params.insert("date_end".to_string(), Value::String(end.to_string()));
+        params.insert("time_period".to_string(), Value::String(period.format("%H:%M:%S").to_string()));
+        params.insert("format".to_string(), Value::String("json".to_string()));
+        if let Some(data_block_type) = data_block_type {
+            params.insert("type".to_string(), Value::String(data_block_type.to_string()));
+        }
+        self.core.authorized_request("getBrokerReport", Some(params), Some(2))
+    }
+
+    pub fn symbol(&self, symbol: &str, lang: &str) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("ticker".to_string(), Value::String(symbol.to_string()));
+        params.insert("lang".to_string(), Value::String(lang.to_string()));
+        self.core.authorized_request("getStockData", Some(params), Some(2))
+    }
+
+    pub fn symbols(&self, exchange: Option<&str>) -> Result<Value, TradernetError> {
+        let params = exchange.map(|exchange| {
+            let mut params = Map::new();
+            params.insert("mkt".to_string(), Value::String(exchange.to_lowercase()));
+            params
+        });
+        self.core.authorized_request("getReadyList", params, Some(2))
+    }
+
+    pub fn corporate_actions(&self, reception: i64) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("reception".to_string(), Value::Number(reception.into()));
+        self.core.authorized_request("getPlannedCorpActions", Some(params), Some(2))
+    }
+
     pub fn buy(
         &self,
         symbol: &str,
@@ -111,6 +412,32 @@ impl Tradernet {
         }
 
         self.trade(symbol, quantity, price, duration, use_margin, custom_order_id)
+    }
+
+    pub fn stop(&self, symbol: &str, price: f64) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("instr_name".to_string(), Value::String(symbol.to_string()));
+        let price = serde_json::Number::from_f64(price)
+            .ok_or_else(|| TradernetError::InvalidInput("Invalid price".to_string()))?;
+        params.insert("stop_loss".to_string(), Value::Number(price));
+        self.core.authorized_request("putStopLoss", Some(params), Some(2))
+    }
+
+    pub fn trailing_stop(&self, symbol: &str, percent: i64) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("instr_name".to_string(), Value::String(symbol.to_string()));
+        params.insert("stop_loss_percent".to_string(), Value::Number(percent.into()));
+        params.insert("stoploss_trailing_percent".to_string(), Value::Number(percent.into()));
+        self.core.authorized_request("putStopLoss", Some(params), Some(2))
+    }
+
+    pub fn take_profit(&self, symbol: &str, price: f64) -> Result<Value, TradernetError> {
+        let mut params = Map::new();
+        params.insert("instr_name".to_string(), Value::String(symbol.to_string()));
+        let price = serde_json::Number::from_f64(price)
+            .ok_or_else(|| TradernetError::InvalidInput("Invalid price".to_string()))?;
+        params.insert("take_profit".to_string(), Value::Number(price));
+        self.core.authorized_request("putStopLoss", Some(params), Some(2))
     }
 
     pub fn sell(
@@ -135,6 +462,26 @@ impl Tradernet {
         self.core.authorized_request("delTradeOrder", Some(params), Some(2))
     }
 
+    pub fn cancel_all(&self) -> Result<Value, TradernetError> {
+        let placed = self.get_placed(true)?;
+        let orders = placed
+            .get("result")
+            .and_then(|value| value.get("orders"))
+            .and_then(|value| value.get("order"))
+            .and_then(|value| value.as_array())
+            .cloned()
+            .unwrap_or_default();
+
+        let mut results = Vec::new();
+        for order in orders {
+            if let Some(order_id) = order.get("id").and_then(|value| value.as_i64()) {
+                results.push(self.cancel(order_id)?);
+            }
+        }
+
+        Ok(Value::Array(results))
+    }
+
     pub fn get_placed(&self, active: bool) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("active_only".to_string(), Value::Number((active as i64).into()));
@@ -152,6 +499,10 @@ impl Tradernet {
             Value::String(end.format("%Y-%m-%dT%H:%M:%S").to_string()),
         );
         self.core.authorized_request("getOrdersHistory", Some(params), Some(2))
+    }
+
+    pub fn get_tariffs_list(&self) -> Result<Value, TradernetError> {
+        self.core.authorized_request("GetListTariffs", None, Some(2))
     }
 
     pub fn trade(
@@ -200,6 +551,64 @@ impl Tradernet {
         }
 
         self.core.authorized_request("putTradeOrder", Some(params), Some(2))
+    }
+
+    fn get_refbook(&self, name: Option<&str>) -> Result<Vec<Map<String, Value>>, TradernetError> {
+        let reference_date = self.latest_refbook()?;
+        if name.is_none() || name == Some("all") {
+            let mut result = Vec::new();
+            for refbook_name in self.refbooks(&reference_date)? {
+                result.extend(self.get_refbook(Some(&refbook_name))?);
+            }
+            return Ok(result);
+        }
+
+        let name = name.unwrap_or("all");
+        let uri = format!("/refbooks/{reference_date}/{name}.json.zip");
+        let mut response = self.core.get_request(&uri, None)?;
+        let mut content = Vec::new();
+        response.read_to_end(&mut content)?;
+
+        let mut archive = ZipArchive::new(std::io::Cursor::new(content))?;
+        if archive.len() != 1 {
+            return Err(TradernetError::InvalidInput("More than one file in the archive".to_string()));
+        }
+
+        let mut file = archive.by_index(0)?;
+        let mut json = String::new();
+        file.read_to_string(&mut json)?;
+        let parsed: Vec<Map<String, Value>> = serde_json::from_str(&json)?;
+        Ok(parsed)
+    }
+
+    fn latest_refbook(&self) -> Result<String, TradernetError> {
+        let mut response = self.core.get_request("/refbooks", None)?;
+        let mut content = String::new();
+        response.read_to_string(&mut content)?;
+        let regex = Regex::new(r"\d{4}-\d{2}-\d{2}/")
+            .map_err(|err| TradernetError::InvalidInput(err.to_string()))?;
+        let mut dates = regex
+            .find_iter(&content)
+            .map(|mat| mat.as_str().trim_end_matches('/').to_string())
+            .collect::<Vec<_>>();
+        dates.sort();
+        dates.pop().ok_or_else(|| TradernetError::InvalidInput("No refbook dates found".to_string()))
+    }
+
+    fn refbooks(&self, reference_date: &str) -> Result<Vec<String>, TradernetError> {
+        let path = format!("/refbooks/{reference_date}");
+        let mut response = self.core.get_request(&path, None)?;
+        let mut content = String::new();
+        response.read_to_string(&mut content)?;
+        let regex = Regex::new(r"([A-Za-z0-9_]+)\.json\.zip")
+            .map_err(|err| TradernetError::InvalidInput(err.to_string()))?;
+        let mut result = regex
+            .captures_iter(&content)
+            .filter_map(|cap| cap.get(1).map(|value| value.as_str().to_string()))
+            .collect::<Vec<_>>();
+        result.sort();
+        result.dedup();
+        Ok(result)
     }
 }
 

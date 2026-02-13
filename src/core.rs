@@ -10,18 +10,25 @@ use std::path::Path;
 use std::fs;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+/// Core Tradernet client that handles authentication and HTTP requests.
 pub struct Core {
+    /// Public API key.
     pub public: Option<String>,
     private: Option<String>,
     net: NetUtils,
 }
 
 impl Core {
+    /// Base API domain used for REST and WebSocket URLs.
     pub const DOMAIN: &str = "freedom24.com";
+    /// Default session time-to-live (seconds).
     pub const SESSION_TIME: u64 = 18_000;
+    /// Chunk size used in batched export operations.
     pub const CHUNK_SIZE: usize = 7_000;
+    /// Max number of symbols per export request.
     pub const MAX_EXPORT_SIZE: usize = 100;
 
+    /// Creates a new [`Core`] with optional API keys.
     pub fn new(public: Option<String>, private: Option<String>) -> Result<Self, TradernetError> {
         let net = NetUtils::new(Duration::from_secs(300))?;
         if public.is_none() || private.is_none() {
@@ -35,20 +42,24 @@ impl Core {
         })
     }
 
+    /// Creates a [`Core`] from an INI config file containing the keypair.
     pub fn from_config(path: impl AsRef<Path>) -> Result<Self, TradernetError> {
         let (public, private) = load_auth_from_ini(path.as_ref())?;
 
         Self::new(public, private)
     }
 
+    /// Returns the base HTTPS URL for the REST API.
     pub fn url() -> String {
         format!("https://{}", Self::DOMAIN)
     }
 
+    /// Returns the base WSS URL for the WebSocket API.
     pub fn websocket_url() -> String {
         format!("wss://wss.{}", Self::DOMAIN)
     }
 
+    /// Builds authentication query parameters for WebSocket connections.
     pub fn websocket_auth(&self) -> HashMap<String, String> {
         let timestamp = current_timestamp();
         let private_key = self.private.clone().unwrap_or_default();
@@ -60,6 +71,7 @@ impl Core {
         ])
     }
 
+    /// Sends an unauthenticated `GET /api` request with a command and params.
     pub fn plain_request(&self, cmd: &str, params: Option<Map<String, Value>>) -> Result<Value, TradernetError> {
         debug!("Making a simple request to API");
 
@@ -77,6 +89,7 @@ impl Core {
         Ok(response.json()?)
     }
 
+    /// Sends an authenticated `POST /api/{cmd}` request (API v2/v3).
     pub fn authorized_request(
         &self,
         cmd: &str,
@@ -122,6 +135,7 @@ impl Core {
         Ok(result)
     }
 
+    /// Sends an authenticated GET request to an API path (API v2/v3).
     pub fn authorized_get_request(
         &self,
         path: &str,
@@ -155,6 +169,7 @@ impl Core {
         self.net.request(Method::GET, &url, Some(headers), params, None)
     }
 
+    /// Sends an unauthenticated GET request to an API path.
     pub fn get_request(
         &self,
         path: &str,
@@ -165,6 +180,7 @@ impl Core {
         self.net.request(Method::GET, &url, None, params, None)
     }
 
+    /// Returns trading sessions for available securities.
     pub fn list_security_sessions(&self) -> Result<Value, TradernetError> {
         self.authorized_request("getSecuritySessions", None, Some(2))
     }

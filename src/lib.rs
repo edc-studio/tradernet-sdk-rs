@@ -1,8 +1,33 @@
+//! Rust SDK for the Tradernet API.
+//!
+//! This crate provides a synchronous REST client, an asynchronous WebSocket client,
+//! and helper types for working with symbols and options.
+//!
+//! # Quick start
+//! ```no_run
+//! use tradernet_sdk_rs::Tradernet;
+//!
+//! # fn main() -> Result<(), tradernet_sdk_rs::TradernetError> {
+//! let client = Tradernet::new(Some("public_key".into()), Some("private_key".into()))?;
+//! let info = client.user_info()?;
+//! println!("{info:?}");
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! See [`TradernetWebsocket`] for streaming market data.
+
+/// Common networking and string helpers.
 pub mod common;
+/// REST API client built on top of [`Core`].
 pub mod client;
+/// Core authentication and request utilities.
 pub mod core;
+/// Error types returned by the SDK.
 pub mod errors;
+/// Symbols and options helpers.
 pub mod symbols;
+/// WebSocket streaming client.
 pub mod ws;
 
 pub use crate::client::Tradernet;

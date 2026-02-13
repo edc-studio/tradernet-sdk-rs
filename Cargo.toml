@@ -2,6 +2,11 @@
 name = "tradernet-sdk-rs"
 version = "0.1.0"
 edition = "2024"
+description = "Rust SDK for the Tradernet REST and WebSocket APIs."
+license = "MIT"
+readme = "README.md"
+keywords = ["tradernet", "trading", "api", "finance", "websocket"]
+categories = ["api-bindings", "web-programming::http-client"]
 
 [dependencies]
 chrono = { version = "0.4", features = ["std"] }

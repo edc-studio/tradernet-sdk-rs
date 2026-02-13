@@ -3,18 +3,28 @@ use crate::errors::TradernetError;
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use serde_json::Value;
 
+/// Helper for downloading and parsing candle data for a symbol.
 pub struct TradernetSymbol {
+    /// Symbol identifier (e.g. `AAPL.US`).
     pub symbol: String,
+    /// Optional REST client instance to reuse.
     pub api: Option<Tradernet>,
+    /// Start date/time for candles.
     pub start: NaiveDateTime,
+    /// End date/time for candles.
     pub end: NaiveDateTime,
+    /// Parsed candle timestamps.
     pub timestamps: Vec<NaiveDateTime>,
+    /// Parsed candle OHLC values.
     pub candles: Vec<[f64; 4]>,
+    /// Parsed candle volumes.
     pub volumes: Vec<i64>,
+    /// Candle timeframe in seconds.
     pub timeframe: i64,
 }
 
 impl TradernetSymbol {
+    /// Creates a new symbol helper with an optional API client.
     pub fn new(
         symbol: &str,
         api: Option<Tradernet>,
@@ -33,6 +43,7 @@ impl TradernetSymbol {
         }
     }
 
+    /// Downloads candles and populates `timestamps`, `candles`, and `volumes`.
     pub fn get_data(&mut self) -> Result<&mut Self, TradernetError> {
         if self.api.is_none() {
             self.api = Some(Tradernet::new(None, None)?);

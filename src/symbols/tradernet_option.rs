@@ -7,6 +7,7 @@ use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
+/// Parser and formatter for Tradernet option notation.
 #[derive(Clone, Debug)]
 pub struct TradernetOption {
     symbol: String,
@@ -14,6 +15,7 @@ pub struct TradernetOption {
 }
 
 impl TradernetOption {
+    /// Parses a Tradernet option symbol into a structured representation.
     pub fn new(symbol: &str) -> Result<Self, TradernetError> {
         let properties = Self::decode_notation(symbol)?;
         Ok(Self {
@@ -22,34 +24,42 @@ impl TradernetOption {
         })
     }
 
+    /// Returns the original option symbol string.
     pub fn symbol(&self) -> &str {
         &self.symbol
     }
 
+    /// Returns the underlying ticker.
     pub fn ticker(&self) -> &str {
         &self.properties.ticker
     }
 
+    /// Returns the optional market/location suffix.
     pub fn location(&self) -> Option<&str> {
         self.properties.location.as_deref()
     }
 
+    /// Returns the numeric option right (call = `1`, put = `-1`).
     pub fn right(&self) -> i32 {
         self.properties.right
     }
 
+    /// Returns the option strike price.
     pub fn strike(&self) -> Decimal {
         self.properties.strike
     }
 
+    /// Returns the option maturity date.
     pub fn maturity_date(&self) -> NaiveDate {
         self.properties.maturity_date
     }
 
+    /// Returns the symbolic expiration string used by Tradernet.
     pub fn symbolic_expiration(&self) -> &str {
         &self.properties.symbolic_expiration
     }
 
+    /// Returns the combined underlying symbol (ticker + optional location).
     pub fn underlying(&self) -> String {
         match &self.properties.location {
             Some(location) if !location.is_empty() => format!("{}.{}", self.properties.ticker, location),
@@ -57,14 +67,17 @@ impl TradernetOption {
         }
     }
 
+    /// Returns the symbolic right (`C` for call, `P` for put).
     pub fn symbolic_right(&self) -> &str {
         if self.right() == 1 { "C" } else { "P" }
     }
 
+    /// Converts a boolean right to numeric form (`1` for call, `-1` for put).
     pub fn numeric_right(is_call: bool) -> i32 {
         if is_call { 1 } else { -1 }
     }
 
+    /// Returns the OSI symbol representation for the option.
     pub fn osi(&self) -> String {
         let expiration = self.maturity_date().format("%y%m%d").to_string();
         let strike = self.strike().to_string();
@@ -76,15 +89,18 @@ impl TradernetOption {
         format!("{}{}{}{}{}", self.ticker(), expiration, self.symbolic_right(), dollar, cent)
     }
 
+    /// Encodes a date into Tradernet symbolic expiration format.
     pub fn encode_date(date: NaiveDate) -> String {
         date.format("%d%b%Y").to_string().to_uppercase()
     }
 
+    /// Decodes a Tradernet symbolic expiration date.
     pub fn decode_date(symbolic_date: &str) -> Result<NaiveDate, TradernetError> {
         NaiveDate::parse_from_str(symbolic_date, "%d%b%Y")
             .map_err(|err| TradernetError::InvalidInput(err.to_string()))
     }
 
+    /// Parses Tradernet option notation into [`OptionProperties`].
     pub fn decode_notation(symbol: &str) -> Result<OptionProperties, TradernetError> {
         let regex = Regex::new(r"^\+(\D+(\d+)?)\.(\d{2}\D{3}\d{4})\.([CP])(\d+(\.\d*)?)$")
             .map_err(|err| TradernetError::InvalidInput(err.to_string()))?;

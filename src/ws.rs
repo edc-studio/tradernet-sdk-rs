@@ -9,15 +9,18 @@ use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 use url::Url;
 
+/// WebSocket client for streaming Tradernet market data.
 pub struct TradernetWebsocket {
     core: Core,
 }
 
 impl TradernetWebsocket {
+    /// Creates a new WebSocket client using an authenticated [`Core`].
     pub fn new(core: Core) -> Self {
         Self { core }
     }
 
+    /// Subscribes to quote updates for a list of symbols.
     pub async fn quotes<I, S>(&self, symbols: I) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError>
     where
         I: IntoIterator<Item = S>,
@@ -28,21 +31,25 @@ impl TradernetWebsocket {
         self.stream_filtered(vec![query], &["q", "error"]).await
     }
 
+    /// Subscribes to order book updates for a symbol.
     pub async fn market_depth(&self, symbol: &str) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
         let query = serde_json::to_string(&serde_json::json!(["orderBook", [symbol]]))?;
         self.stream_filtered(vec![query], &["b", "error"]).await
     }
 
+    /// Subscribes to portfolio updates.
     pub async fn portfolio(&self) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
         let query = serde_json::to_string(&serde_json::json!(["portfolio"]))?;
         self.stream_filtered(vec![query], &["portfolio", "error"]).await
     }
 
+    /// Subscribes to active orders updates.
     pub async fn orders(&self) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
         let query = serde_json::to_string(&serde_json::json!(["orders"]))?;
         self.stream_filtered(vec![query], &["orders", "error"]).await
     }
 
+    /// Subscribes to markets status updates.
     pub async fn markets(&self) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
         let query = serde_json::to_string(&serde_json::json!(["markets"]))?;
         self.stream_filtered(vec![query], &["markets", "error"]).await

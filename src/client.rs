@@ -7,31 +7,37 @@ use std::collections::HashMap;
 use std::io::Read;
 use zip::ZipArchive;
 
+/// High-level REST client for the Tradernet API.
 pub struct Tradernet {
     core: Core,
 }
 
 impl Tradernet {
+    /// Creates a REST client with optional API keys.
     pub fn new(public: Option<String>, private: Option<String>) -> Result<Self, TradernetError> {
         Ok(Self {
             core: Core::new(public, private)?,
         })
     }
 
+    /// Creates a REST client from an INI config file with credentials.
     pub fn from_config(path: impl AsRef<std::path::Path>) -> Result<Self, TradernetError> {
         Ok(Self {
             core: Core::from_config(path)?,
         })
     }
 
+    /// Returns a reference to the underlying [`Core`].
     pub fn core(&self) -> &Core {
         &self.core
     }
 
+    /// Returns authenticated user information.
     pub fn user_info(&self) -> Result<Value, TradernetError> {
         self.core.authorized_request("GetAllUserTexInfo", None, Some(2))
     }
 
+    /// Registers a new user.
     pub fn new_user(
         &self,
         login: &str,
@@ -60,6 +66,7 @@ impl Tradernet {
         self.core.plain_request("registerNewUser", Some(params))
     }
 
+    /// Checks missing onboarding fields for the given step and office.
     pub fn check_missing_fields(&self, step: i64, office: &str) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("step".to_string(), Value::Number(step.into()));
@@ -67,16 +74,19 @@ impl Tradernet {
         self.core.authorized_request("checkStep", Some(params), Some(2))
     }
 
+    /// Returns profile fields for a given reception.
     pub fn get_profile_fields(&self, reception: i64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("reception".to_string(), Value::Number(reception.into()));
         self.core.authorized_request("getProfileFields", Some(params), Some(2))
     }
 
+    /// Returns user data (OPQ) for the authenticated account.
     pub fn get_user_data(&self) -> Result<Value, TradernetError> {
         self.core.authorized_request("getOPQ", None, Some(2))
     }
 
+    /// Returns market status for a given market code.
     pub fn get_market_status(&self, market: &str, mode: Option<&str>) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("market".to_string(), Value::String(market.to_string()));
@@ -86,6 +96,7 @@ impl Tradernet {
         self.core.authorized_request("getMarketStatus", Some(params), Some(2))
     }
 
+    /// Returns the most traded securities for a given exchange/type.
     pub fn get_most_traded(
         &self,
         instrument_type: &str,
@@ -101,6 +112,7 @@ impl Tradernet {
         self.core.plain_request("getTopSecurities", Some(params))
     }
 
+    /// Exports securities data for a list of symbols.
     pub fn export_securities<I, S>(
         &self,
         symbols: I,
@@ -128,6 +140,7 @@ impl Tradernet {
         Ok(Value::Array(results))
     }
 
+    /// Returns security information for the given ticker.
     pub fn security_info(&self, symbol: &str, sup: bool) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("ticker".to_string(), Value::String(symbol.to_string()));
@@ -135,6 +148,7 @@ impl Tradernet {
         self.core.authorized_request("getSecurityInfo", Some(params), Some(2))
     }
 
+    /// Returns options chain data for an underlying on a given exchange.
     pub fn get_options(&self, underlying: &str, exchange: &str) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("underlying".to_string(), Value::String(underlying.to_string()));
@@ -142,6 +156,7 @@ impl Tradernet {
         self.core.authorized_request("getOptionsByMkt", Some(params), Some(2))
     }
 
+    /// Returns candle data for a symbol and time range.
     pub fn get_candles(
         &self,
         symbol: &str,
@@ -169,6 +184,7 @@ impl Tradernet {
         self.core.authorized_request("getHloc", Some(params), Some(2))
     }
 
+    /// Returns quote data for a list of symbols.
     pub fn get_quotes<I, S>(&self, symbols: I) -> Result<Value, TradernetError>
     where
         I: IntoIterator<Item = S>,
@@ -184,6 +200,7 @@ impl Tradernet {
         self.core.authorized_request("getStockQuotesJson", Some(params), Some(2))
     }
 
+    /// Returns trades history for a given date range.
     pub fn get_trades_history(
         &self,
         start: NaiveDate,
@@ -211,6 +228,7 @@ impl Tradernet {
         self.core.authorized_request("getTradesHistory", Some(params), Some(2))
     }
 
+    /// Searches for symbols by text (optionally within a specific exchange).
     pub fn find_symbol(&self, symbol: &str, exchange: Option<&str>) -> Result<Value, TradernetError> {
         let text = match exchange {
             Some(exchange) => format!("{symbol}@{exchange}"),
@@ -221,6 +239,7 @@ impl Tradernet {
         self.core.plain_request("tickerFinder", Some(params))
     }
 
+    /// Retrieves news items for a query and optional filters.
     pub fn get_news(
         &self,
         query: &str,
@@ -240,6 +259,7 @@ impl Tradernet {
         self.core.authorized_request("getNews", Some(params), Some(2))
     }
 
+    /// Returns a filtered list of securities from refbooks.
     pub fn get_all(
         &self,
         mut filters: Option<HashMap<String, Value>>,
@@ -267,10 +287,12 @@ impl Tradernet {
         Ok(Value::Array(filtered))
     }
 
+    /// Returns a summary of account positions.
     pub fn account_summary(&self) -> Result<Value, TradernetError> {
         self.core.authorized_request("getPositionJson", None, Some(2))
     }
 
+    /// Returns price alerts for all symbols or a specific ticker.
     pub fn get_price_alerts(&self, symbol: Option<&str>) -> Result<Value, TradernetError> {
         let params = symbol.map(|symbol| {
             let mut params = Map::new();
@@ -280,6 +302,7 @@ impl Tradernet {
         self.core.authorized_request("getAlertsList", params, Some(2))
     }
 
+    /// Creates a price alert for a symbol.
     pub fn add_price_alert<I, S>(
         &self,
         symbol: &str,
@@ -306,6 +329,7 @@ impl Tradernet {
         self.core.authorized_request("addPriceAlert", Some(params), Some(2))
     }
 
+    /// Deletes a price alert by identifier.
     pub fn delete_price_alert(&self, alert_id: i64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("id".to_string(), Value::Number(alert_id.into()));
@@ -313,6 +337,7 @@ impl Tradernet {
         self.core.authorized_request("addPriceAlert", Some(params), Some(2))
     }
 
+    /// Returns history for client requests (CPS history).
     pub fn get_requests_history(
         &self,
         doc_id: Option<i64>,
@@ -344,6 +369,7 @@ impl Tradernet {
         self.core.authorized_request("getClientCpsHistory", Some(params), Some(2))
     }
 
+    /// Downloads files for a specific order by ID.
     pub fn get_order_files(&self, order_id: Option<i64>, internal_id: Option<i64>) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         if let Some(internal_id) = internal_id {
@@ -358,6 +384,7 @@ impl Tradernet {
         self.core.authorized_request("getCpsFiles", Some(params), Some(2))
     }
 
+    /// Retrieves broker report for a given date range.
     pub fn get_broker_report(
         &self,
         start: NaiveDate,
@@ -376,6 +403,7 @@ impl Tradernet {
         self.core.authorized_request("getBrokerReport", Some(params), Some(2))
     }
 
+    /// Returns detailed information about a symbol.
     pub fn symbol(&self, symbol: &str, lang: &str) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("ticker".to_string(), Value::String(symbol.to_string()));
@@ -383,6 +411,7 @@ impl Tradernet {
         self.core.authorized_request("getStockData", Some(params), Some(2))
     }
 
+    /// Returns the list of symbols for an exchange.
     pub fn symbols(&self, exchange: Option<&str>) -> Result<Value, TradernetError> {
         let params = exchange.map(|exchange| {
             let mut params = Map::new();
@@ -392,12 +421,14 @@ impl Tradernet {
         self.core.authorized_request("getReadyList", params, Some(2))
     }
 
+    /// Returns planned corporate actions for a reception.
     pub fn corporate_actions(&self, reception: i64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("reception".to_string(), Value::Number(reception.into()));
         self.core.authorized_request("getPlannedCorpActions", Some(params), Some(2))
     }
 
+    /// Places a buy order.
     pub fn buy(
         &self,
         symbol: &str,
@@ -414,6 +445,7 @@ impl Tradernet {
         self.trade(symbol, quantity, price, duration, use_margin, custom_order_id)
     }
 
+    /// Places a stop-loss order for a symbol.
     pub fn stop(&self, symbol: &str, price: f64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("instr_name".to_string(), Value::String(symbol.to_string()));
@@ -423,6 +455,7 @@ impl Tradernet {
         self.core.authorized_request("putStopLoss", Some(params), Some(2))
     }
 
+    /// Places a trailing stop-loss order.
     pub fn trailing_stop(&self, symbol: &str, percent: i64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("instr_name".to_string(), Value::String(symbol.to_string()));
@@ -431,6 +464,7 @@ impl Tradernet {
         self.core.authorized_request("putStopLoss", Some(params), Some(2))
     }
 
+    /// Places a take-profit order.
     pub fn take_profit(&self, symbol: &str, price: f64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("instr_name".to_string(), Value::String(symbol.to_string()));
@@ -440,6 +474,7 @@ impl Tradernet {
         self.core.authorized_request("putStopLoss", Some(params), Some(2))
     }
 
+    /// Places a sell order.
     pub fn sell(
         &self,
         symbol: &str,
@@ -456,12 +491,14 @@ impl Tradernet {
         self.trade(symbol, -quantity, price, duration, use_margin, custom_order_id)
     }
 
+    /// Cancels a single order by ID.
     pub fn cancel(&self, order_id: i64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("order_id".to_string(), Value::Number(order_id.into()));
         self.core.authorized_request("delTradeOrder", Some(params), Some(2))
     }
 
+    /// Cancels all active orders.
     pub fn cancel_all(&self) -> Result<Value, TradernetError> {
         let placed = self.get_placed(true)?;
         let orders = placed
@@ -482,12 +519,14 @@ impl Tradernet {
         Ok(Value::Array(results))
     }
 
+    /// Returns placed orders (active-only when specified).
     pub fn get_placed(&self, active: bool) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("active_only".to_string(), Value::Number((active as i64).into()));
         self.core.authorized_request("getNotifyOrderJson", Some(params), Some(2))
     }
 
+    /// Returns historical orders for the given time range.
     pub fn get_historical(&self, start: DateTime<Local>, end: DateTime<Local>) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert(
@@ -501,10 +540,12 @@ impl Tradernet {
         self.core.authorized_request("getOrdersHistory", Some(params), Some(2))
     }
 
+    /// Returns the list of available tariffs.
     pub fn get_tariffs_list(&self) -> Result<Value, TradernetError> {
         self.core.authorized_request("GetListTariffs", None, Some(2))
     }
 
+    /// Places a trade order (buy/sell depending on quantity sign).
     pub fn trade(
         &self,
         symbol: &str,

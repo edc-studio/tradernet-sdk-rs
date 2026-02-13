@@ -5,10 +5,12 @@ use std::collections::BTreeMap;
 
 type HmacSha256 = Hmac<Sha256>;
 
+/// Serializes a JSON value to a compact string.
 pub fn stringify(value: &Value) -> Result<String, serde_json::Error> {
     serde_json::to_string(value)
 }
 
+/// Generates an HMAC-SHA256 signature for the given message.
 pub fn sign(key: &str, message: &str) -> String {
     let mut mac = HmacSha256::new_from_slice(key.as_bytes())
         .expect("HMAC can take key of any size");
@@ -16,6 +18,7 @@ pub fn sign(key: &str, message: &str) -> String {
     hex::encode(mac.finalize().into_bytes())
 }
 
+/// Flattens a JSON map and builds a URL-encoded query string.
 pub fn http_build_query(dictionary: &Map<String, Value>) -> String {
     let mut flat: BTreeMap<String, Value> = BTreeMap::new();
 

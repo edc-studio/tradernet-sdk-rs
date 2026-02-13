@@ -4,17 +4,21 @@ use reqwest::header::HeaderMap;
 use reqwest::Method;
 use std::time::Duration;
 
+/// Blocking HTTP client wrapper used by the SDK.
 pub struct NetUtils {
     client: Client,
+    /// Request timeout configured for the underlying client.
     pub timeout: Duration,
 }
 
 impl NetUtils {
+    /// Creates a new HTTP client with the specified timeout.
     pub fn new(timeout: Duration) -> Result<Self, TradernetError> {
         let client = Client::builder().timeout(timeout).build()?;
         Ok(Self { client, timeout })
     }
 
+    /// Sends an HTTP request and returns the response with error status checked.
     pub fn request(
         &self,
         method: Method,

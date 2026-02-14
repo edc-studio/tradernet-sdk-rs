@@ -1,5 +1,6 @@
 use crate::core::Core;
 use crate::errors::TradernetError;
+use crate::user_data::UserDataResponse;
 use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, NaiveTime};
 use regex::Regex;
 use serde_json::{Map, Value};
@@ -100,8 +101,9 @@ impl Tradernet {
     }
 
     /// Returns user data (OPQ) for the authenticated account.
-    pub fn get_user_data(&self) -> Result<Value, TradernetError> {
-        self.core.authorized_request("getOPQ", None, Some(2))
+    pub fn get_user_data(&self) -> Result<UserDataResponse, TradernetError> {
+        let response = self.core.authorized_request("getOPQ", None, Some(2))?;
+        Ok(serde_json::from_value(response)?)
     }
 
     /// Returns market status for a given market code.

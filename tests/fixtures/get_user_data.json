@@ -1,0 +1,358 @@
+{
+  "OPQ": {
+    "rev": 2011111110,
+    "init_margin": 2,
+    "brief_nm": "000000",
+    "reception": 1,
+    "active": 1,
+    "quotes": {
+      "q": [
+        {
+          "acd": 0,
+          "baf": 0,
+          "bap": 151.7,
+          "bas": 209,
+          "base_contract_code": "",
+          "base_currency": "",
+          "base_ltr": "FIX",
+          "bbf": 0,
+          "bbp": 151.0,
+          "bbs": 147.0,
+          "c": "AAPL.US",
+          "chg": 0.65,
+          "chg110": 20.24,
+          "chg22": 3.89,
+          "chg220": 29.67,
+          "chg5": 2.53,
+          "ClosePrice": 151.0,
+          "codesub_nm": "NASDAQ",
+          "cpn": 0,
+          "cpp": 0,
+          "dpb": 0,
+          "dps": 0,
+          "emitent_type": "",
+          "fv": 100,
+          "init": 1,
+          "ipo": null,
+          "issue_nb": "US0378331005",
+          "kind": 1,
+          "ltp": 151.57,
+          "ltr": "FIX",
+          "lts": 76,
+          "ltt": "2021-11-05T10:07:10",
+          "marketStatus": "OPEN",
+          "maxtp": 152.0,
+          "min_step": 0.01,
+          "mintp": 151.0,
+          "mrg": "M",
+          "mtd": "",
+          "n": 2395,
+          "name": "Apple Inc.",
+          "name2": "",
+          "ncd": "",
+          "ncp": 0,
+          "op": 151.0,
+          "option_type": "",
+          "otc_instr": "AAPL.US.OTC",
+          "p110": 125.0,
+          "p22": 145.0,
+          "p220": 116.0,
+          "p5": 147.0,
+          "pcp": 0.43,
+          "pp": 150.92,
+          "quote_basis": "",
+          "rev": 20614034,
+          "scheme_calc": "T2",
+          "step_price": 0.01,
+          "strike_price": 0,
+          "trades": 2715,
+          "TradingReferencePrice": 0,
+          "TradingSessionSubID": "",
+          "type": 1,
+          "UTCOffset": -240,
+          "virt_base_instr": "",
+          "vlt": 1772090810.19,
+          "vol": 11691567,
+          "x_agg_futures": "",
+          "x_curr": "USD",
+          "x_currVal": 71.73,
+          "x_descr": "Компания Apple Inc. – общепризнанный новатор и экспериментатор, диктующий технологические правила и моду в компьютерном дизайне.",
+          "x_dsc1": 25,
+          "x_dsc1_reception": "0=25.0000,1=25.0000",
+          "x_dsc2": 100,
+          "x_dsc3": 100,
+          "x_istrade": 1,
+          "x_lot": 1,
+          "x_max": 325.05,
+          "x_min": 80.1875,
+          "x_min_lot_q": "",
+          "x_short": 1,
+          "x_short_reception": "0=1,1=1",
+          "yld": 0,
+          "yld_ytm_ask": 0,
+          "yld_ytm_bid": 0
+        }
+      ]
+    },
+    "ps": {
+      "loaded": true,
+      "acc": [
+        {
+          "curr": "USD",
+          "currval": 1.0,
+          "forecast_in": 0.0,
+          "forecast_out": 0.0,
+          "t2_in": 0.0,
+          "t2_out": 0.0,
+          "s": 358.0
+        }
+      ],
+      "pos": [
+        {
+          "open_bal": 100.8,
+          "mkt_price": 13.5,
+          "name": "Компания Apple Inc. – общепризнанный новатор и экспериментатор, диктующий технологические правила и моду в компьютерном дизайне.",
+          "i": "AAPL.US",
+          "t": 1,
+          "scheme_calc": "T2",
+          "instr_id": null,
+          "Yield": 0,
+          "issue_nb": "",
+          "profit_price": 11.5,
+          "acc_pos_id": 9485,
+          "accruedint_a": 0,
+          "acd": 0,
+          "k": 1,
+          "bal_price_a": 11.78,
+          "price_a": 11.78,
+          "base_currency": "USD",
+          "face_val_a": 0.64,
+          "curr": "USD",
+          "go": 0,
+          "profit_close": -2.8,
+          "fv": 100,
+          "vm": 0,
+          "q": 10,
+          "name2": "Компания Apple Inc. – общепризнанный новатор и экспериментатор, диктующий технологические правила и моду в компьютерном дизайне.",
+          "market_value": 110.0,
+          "close_price": 11.588,
+          "currval": 1,
+          "s": 110.8
+        }
+      ]
+    },
+    "orders": {
+      "loaded": true,
+      "order": []
+    },
+    "sess": [],
+    "markets": {
+      "markets": {
+        "t": "11/5/2021 3:01:20 AM",
+        "m": [
+          {
+            "n": "FIX",
+            "n2": "FIX",
+            "s": "CLOSE",
+            "o": "10:00:00",
+            "c": "23:50:00",
+            "dt": 0,
+            "p": "09:50:00",
+            "post": "19:00:00",
+            "date": [
+              {
+                "from": "0101",
+                "to": "0101",
+                "dayoff": 1,
+                "desc": "Новый год"
+              }
+            ],
+            "ev": [
+              {
+                "id": "StartGate",
+                "t": "09:20:00",
+                "next": "2021-11-05T09:20:00"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "source": "account1",
+    "offbalance": {
+      "net_assets": 0,
+      "pos": [],
+      "acc": []
+    },
+    "homeCurrency": "USD",
+    "userLists": {
+      "userStockLists": {
+        "default": ["BA.US", "MCD.US", "AXP.US", "MMM.US"]
+      },
+      "userStockListSelected": "default",
+      "stocksArray": ["MCD.US", "AXP.US", "MMM.US"]
+    },
+    "NO_ORDER_GROWLS": null,
+    "userInfo": {
+      "id": 100000000,
+      "group_id": 1,
+      "login": "User",
+      "lastname": "User",
+      "firstname": "User",
+      "middlename": "User",
+      "last_first_middle_name": "User User User",
+      "first_last_name": "User User",
+      "email": "User@User.com",
+      "mod_tmstmp": "2021-11-05 08:08:42.2293",
+      "rec_tmstmp": "2019-07-23 12:04:05",
+      "last_visit_tmstmp": "2021-10-01 16:46:55",
+      "umod_tmstmp": "2021-01-12 12:09:09",
+      "date_tsmod": "2021-07-07 11:35:00",
+      "date_last_request": "2021-10-05 17:00:23",
+      "f_active": 1,
+      "trader_systems_id": "000000",
+      "f_demo": 0,
+      "birthday": "1971-01-01",
+      "sex": null,
+      "citizenship": "Europe",
+      "citizenship_code": "EU",
+      "status": "Клиент",
+      "type": "Физ. лицо",
+      "status_id": 10013,
+      "utm_campaign": null,
+      "auth_login": "User@User.com",
+      "settlement_pair": "{1000000000}",
+      "description": null,
+      "tel": "+49999998811",
+      "fb_uid": null,
+      "robot": 0,
+      "minimum_investment": null,
+      "language": "en",
+      "additional_status": 11278,
+      "profilename": "User",
+      "reception": 1,
+      "reception_service": 1,
+      "briefnm_additional": null,
+      "manager_user_id": 111111111,
+      "google_id": null,
+      "details": {
+        "iis": "regular",
+        "push": {
+          "android_tn": "eV"
+        },
+        "comment": "b/w scan",
+        "smev_sms": "12131231",
+        "statuses": {
+          "0": "2019-07-23",
+          "1": "2019-08-02",
+          "10012": "2019-08-13",
+          "10013": "2019-08-14",
+          "10815": "2019-08-02",
+          "10816": "2019-08-13",
+          "10817": "2019-07-23",
+          "10832": "2019-08-13"
+        },
+        "mkt_codes": {
+          "30000000001": "CY0184",
+          "30000000002": "U702U6"
+        },
+        "telegram_id": "11111111",
+        "telegram_bot": true,
+        "Date register": "2020-07-01",
+        "isLeadAccount": true,
+        "Date open real": "2019-08-14",
+        "passport_check": "expired",
+        "mail_subscription": 1,
+        "ffinbank_requisites": {
+          "date_mod": "05.11.2021 08:08:42",
+          "response": {
+            "Accounts": [
+              {
+                "Number": "Not found",
+                "Passport": "1511 7111111"
+              }
+            ]
+          }
+        },
+        "initial_telegram_id": "21111111111",
+        "passport_check_date": "2021-11-05 01:43:42",
+        "lastShownDateMessage": {
+          "e2V": 111213123123
+        },
+        "utm_campaign - to Real": null,
+        "utm_campaign - Register": "",
+        "telegram_last_updated_at": 1123123123123,
+        "personal_anketa_last_date": "2021-07-07 00:00:00",
+        "detected_reception_service": 1
+      },
+      "inn": "31111111111111111111",
+      "country": null,
+      "original_client_user_id": 100000000,
+      "contact_id": null,
+      "role_name": "user",
+      "role": 1,
+      "date_open_real": "2019-01-14",
+      "numdoc": "7000000",
+      "docseries": "1500",
+      "regname": "",
+      "regcode": "000-000",
+      "datedoc": "2008-01-14T00:00:00",
+      "documents": "{}",
+      "bornplace": "",
+      "f_kval": 0,
+      "account_block_date": "2021-01-06 02:52:26",
+      "client_date_close": null,
+      "date_client_doc_received": "2019-01-14",
+      "iis": "regular",
+      "isleadaccount": "true",
+      "mkt_codes": "{\"30000000012\": \"56896\"}",
+      "object_type": "user",
+      "registered_at_domain": "tradernet.com",
+      "email_confirm": 1,
+      "blocks_count": 1,
+      "isIpoAvailable": true,
+      "currentlyAvailableIpos": 2,
+      "isSubscribedToNewIpos": 0,
+      "isStockBonusAvailable": false,
+      "stockBonusIdKey": false,
+      "kassaNovaInvestCardAvailable": false,
+      "messages_counts": {
+        "no_read": 5,
+        "all": 300
+      },
+      "tariffDetails": {
+        "id": 79,
+        "name": "Стандартный",
+        "curr": "USD"
+      }
+    },
+    "userOptions": {
+      "cost_open": 0,
+      "cost_last": 1,
+      "cost_low": 0,
+      "cost_high": 0,
+      "bid_last": 0,
+      "offer_last": 0,
+      "volume": 1,
+      "graphic_type": 1,
+      "graphic_format": "Candlestick",
+      "period": "Y1",
+      "time_period": "00:00 - 23:59",
+      "interval": "D1",
+      "date_from": "13.05.2019",
+      "date_to": "13.08.2019",
+      "api_secret": "",
+      "f_transaction": 0,
+      "f_compare_index": 0,
+      "graphic_indicators": "&i00",
+      "profile_type": 1,
+      "showPortfolioBlock": 1,
+      "pageFirstTabOpen": 0,
+      "cover": "/layout/img/bg.png",
+      "access_cost": 10,
+      "theme": "light",
+      "showTransactionsMode": "2",
+      "gridPortfolio": ["type", "code", "instr_name"]
+    }
+  }
+}

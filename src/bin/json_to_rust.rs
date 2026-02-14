@@ -81,7 +81,11 @@ impl StructDef {
             if let Some(rename) = &field.serde_rename {
                 out.push_str(&format!("    #[serde(rename = \"{}\")]\n", rename));
             }
-            out.push_str(&format!("    pub {}: {},\n", field.name, field.rust_type.render()));
+            out.push_str(&format!(
+                "    pub {}: {},\n",
+                field.name,
+                field.rust_type.render()
+            ));
         }
         out.push_str("}\n");
         out
@@ -134,7 +138,10 @@ impl Context {
             });
         }
 
-        self.defs.push(StructDef { name: name.clone(), fields });
+        self.defs.push(StructDef {
+            name: name.clone(),
+            fields,
+        });
         name
     }
 
@@ -299,7 +306,12 @@ fn field_name_from_json(original: &str) -> (String, bool) {
         changed = true;
     }
 
-    if name.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+    if name
+        .chars()
+        .next()
+        .map(|c| c.is_ascii_digit())
+        .unwrap_or(false)
+    {
         name = format!("_{name}");
         changed = true;
     }
@@ -336,7 +348,12 @@ fn struct_name_from_json(original: &str) -> String {
         name.push_str("Generated");
     }
 
-    if name.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+    if name
+        .chars()
+        .next()
+        .map(|c| c.is_ascii_digit())
+        .unwrap_or(false)
+    {
         name.insert(0, 'N');
     }
 
@@ -350,8 +367,7 @@ fn struct_name_from_json(original: &str) -> String {
 fn is_rust_keyword(name: &str) -> bool {
     matches!(
         name,
-        "as"
-            | "break"
+        "as" | "break"
             | "const"
             | "continue"
             | "crate"
@@ -411,10 +427,8 @@ mod tests {
 
     #[test]
     fn generates_basic_struct() {
-        let value: Value = serde_json::from_str(
-            r#"{"id":1,"price":1.5,"active":true,"name":"Test"}"#,
-        )
-        .unwrap();
+        let value: Value =
+            serde_json::from_str(r#"{"id":1,"price":1.5,"active":true,"name":"Test"}"#).unwrap();
 
         let output = generate_rust(&value);
         let expected = "use serde::{Deserialize, Serialize};\n\n#[derive(Debug, Serialize, Deserialize)]\npub struct Root {\n    pub active: bool,\n    pub id: i64,\n    pub name: String,\n    pub price: f64,\n}\n\n";

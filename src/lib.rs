@@ -27,15 +27,15 @@ pub mod core;
 pub mod errors;
 /// Symbols and options helpers.
 pub mod symbols;
-/// WebSocket streaming client.
-pub mod ws;
 /// Typed responses for get_user_data.
 pub mod user_data;
+/// WebSocket streaming client.
+pub mod ws;
 
 pub use crate::client::Tradernet;
 pub use crate::core::Core;
 pub use crate::errors::TradernetError;
 pub use crate::symbols::tradernet_option::TradernetOption;
 pub use crate::symbols::tradernet_symbol::TradernetSymbol;
-pub use crate::ws::TradernetWebsocket;
 pub use crate::user_data::UserDataResponse;
+pub use crate::ws::TradernetWebsocket;

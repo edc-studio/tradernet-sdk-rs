@@ -14,6 +14,7 @@ pub struct Tradernet {
 
 impl Tradernet {
     /// Creates a REST client with optional API keys.
+    #[allow(clippy::result_large_err)]
     pub fn new(public: Option<String>, private: Option<String>) -> Result<Self, TradernetError> {
         Ok(Self {
             core: Core::new(public, private)?,
@@ -21,6 +22,7 @@ impl Tradernet {
     }
 
     /// Creates a REST client from an INI config file with credentials.
+    #[allow(clippy::result_large_err)]
     pub fn from_config(path: impl AsRef<std::path::Path>) -> Result<Self, TradernetError> {
         Ok(Self {
             core: Core::from_config(path)?,
@@ -38,6 +40,7 @@ impl Tradernet {
     }
 
     /// Registers a new user.
+    #[allow(clippy::too_many_arguments)]
     pub fn new_user(
         &self,
         login: &str,
@@ -169,7 +172,7 @@ impl Tradernet {
         params.insert("count".to_string(), Value::Number((-1).into()));
         params.insert(
             "timeframe".to_string(),
-            Value::Number(((timeframe_seconds / 60) as i64).into()),
+            Value::Number((timeframe_seconds / 60).into()),
         );
         params.insert(
             "date_from".to_string(),
@@ -303,6 +306,7 @@ impl Tradernet {
     }
 
     /// Creates a price alert for a symbol.
+    #[allow(clippy::too_many_arguments)]
     pub fn add_price_alert<I, S>(
         &self,
         symbol: &str,
@@ -330,6 +334,7 @@ impl Tradernet {
     }
 
     /// Deletes a price alert by identifier.
+    #[allow(clippy::result_large_err)]
     pub fn delete_price_alert(&self, alert_id: i64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("id".to_string(), Value::Number(alert_id.into()));
@@ -338,6 +343,7 @@ impl Tradernet {
     }
 
     /// Returns history for client requests (CPS history).
+    #[allow(clippy::too_many_arguments)]
     pub fn get_requests_history(
         &self,
         doc_id: Option<i64>,

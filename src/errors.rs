@@ -14,20 +14,56 @@ pub enum TradernetError {
     InvalidInput(String),
     /// HTTP transport error.
     #[error("http error: {0}")]
-    Http(#[from] reqwest::Error),
+    Http(#[from] Box<reqwest::Error>),
     /// I/O error.
     #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(#[from] Box<std::io::Error>),
     /// JSON serialization/deserialization error.
     #[error("json error: {0}")]
-    Json(#[from] serde_json::Error),
+    Json(#[from] Box<serde_json::Error>),
     /// WebSocket transport error.
     #[error("websocket error: {0}")]
-    Websocket(#[from] tokio_tungstenite::tungstenite::Error),
+    Websocket(#[from] Box<tokio_tungstenite::tungstenite::Error>),
     /// URL parsing error.
     #[error("url parse error: {0}")]
-    Url(#[from] url::ParseError),
+    Url(#[from] Box<url::ParseError>),
     /// Zip archive error.
     #[error("zip error: {0}")]
-    Zip(#[from] zip::result::ZipError),
+    Zip(#[from] Box<zip::result::ZipError>),
+}
+
+impl From<reqwest::Error> for TradernetError {
+    fn from(error: reqwest::Error) -> Self {
+        Self::Http(Box::new(error))
+    }
+}
+
+impl From<std::io::Error> for TradernetError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(Box::new(error))
+    }
+}
+
+impl From<serde_json::Error> for TradernetError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(Box::new(error))
+    }
+}
+
+impl From<tokio_tungstenite::tungstenite::Error> for TradernetError {
+    fn from(error: tokio_tungstenite::tungstenite::Error) -> Self {
+        Self::Websocket(Box::new(error))
+    }
+}
+
+impl From<url::ParseError> for TradernetError {
+    fn from(error: url::ParseError) -> Self {
+        Self::Url(Box::new(error))
+    }
+}
+
+impl From<zip::result::ZipError> for TradernetError {
+    fn from(error: zip::result::ZipError) -> Self {
+        Self::Zip(Box::new(error))
+    }
 }

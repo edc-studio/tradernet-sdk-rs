@@ -74,12 +74,14 @@ impl TradernetWebsocket {
                 let message = message?;
                 if let Message::Text(text) = message {
                     let parsed: Value = serde_json::from_str(&text)?;
-                    if let Some(event) = parsed.get(0).and_then(|value| value.as_str()) {
-                        if allowed.contains(event) {
-                            if let Some(data) = parsed.get(1) {
-                                yield data.clone();
-                            }
-                        }
+                    if let Some((event, data)) = parsed.as_array().and_then(|values| {
+                        let event = values.first()?.as_str()?;
+                        let data = values.get(1)?;
+                        Some((event, data))
+                    })
+                        && allowed.contains(event)
+                    {
+                        yield data.clone();
                     }
                 }
             }

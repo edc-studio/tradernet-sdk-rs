@@ -13,12 +13,14 @@ pub struct NetUtils {
 
 impl NetUtils {
     /// Creates a new HTTP client with the specified timeout.
+    #[allow(clippy::result_large_err)]
     pub fn new(timeout: Duration) -> Result<Self, TradernetError> {
         let client = Client::builder().timeout(timeout).build()?;
         Ok(Self { client, timeout })
     }
 
     /// Sends an HTTP request and returns the response with error status checked.
+    #[allow(clippy::result_large_err)]
     pub fn request(
         &self,
         method: Method,

@@ -151,7 +151,7 @@ impl Core {
         }
 
         let timestamp = current_timestamp();
-        let message = format!("{timestamp}");
+        let message = timestamp.clone();
 
         let mut headers = HeaderMap::new();
         if let Ok(value) = HeaderValue::from_str(public) {

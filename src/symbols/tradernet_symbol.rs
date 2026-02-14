@@ -93,7 +93,7 @@ fn parse_candles(response: &Value, symbol: &str) -> Vec<[f64; 4]> {
                         return None;
                     }
                     Some([
-                        values.get(0).and_then(|v| v.as_f64())?,
+                        values.first().and_then(|v| v.as_f64())?,
                         values.get(1).and_then(|v| v.as_f64())?,
                         values.get(2).and_then(|v| v.as_f64())?,
                         values.get(3).and_then(|v| v.as_f64())?,

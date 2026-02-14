@@ -1,7 +1,7 @@
 use crate::errors::TradernetError;
+use reqwest::Method;
 use reqwest::blocking::Client;
 use reqwest::header::HeaderMap;
-use reqwest::Method;
 use std::time::Duration;
 
 /// Blocking HTTP client wrapper used by the SDK.

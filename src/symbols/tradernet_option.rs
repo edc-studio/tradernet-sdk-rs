@@ -62,7 +62,9 @@ impl TradernetOption {
     /// Returns the combined underlying symbol (ticker + optional location).
     pub fn underlying(&self) -> String {
         match &self.properties.location {
-            Some(location) if !location.is_empty() => format!("{}.{}", self.properties.ticker, location),
+            Some(location) if !location.is_empty() => {
+                format!("{}.{}", self.properties.ticker, location)
+            }
             _ => self.properties.ticker.clone(),
         }
     }
@@ -86,7 +88,14 @@ impl TradernetOption {
         let cents = parts.next().unwrap_or("0");
         let dollar = format!("{:0>5}", dollars);
         let cent = format!("{:0>3}", cents);
-        format!("{}{}{}{}{}", self.ticker(), expiration, self.symbolic_right(), dollar, cent)
+        format!(
+            "{}{}{}{}{}",
+            self.ticker(),
+            expiration,
+            self.symbolic_right(),
+            dollar,
+            cent
+        )
     }
 
     /// Encodes a date into Tradernet symbolic expiration format.
@@ -104,10 +113,15 @@ impl TradernetOption {
     pub fn decode_notation(symbol: &str) -> Result<OptionProperties, TradernetError> {
         let regex = Regex::new(r"^\+(\D+(\d+)?)\.(\d{2}\D{3}\d{4})\.([CP])(\d+(\.\d*)?)$")
             .map_err(|err| TradernetError::InvalidInput(err.to_string()))?;
-        let captures = regex.captures(symbol)
-            .ok_or_else(|| TradernetError::InvalidInput(format!("Invalid Tradernet option symbol: {symbol}")))?;
+        let captures = regex.captures(symbol).ok_or_else(|| {
+            TradernetError::InvalidInput(format!("Invalid Tradernet option symbol: {symbol}"))
+        })?;
 
-        let ticker = captures.get(1).map(|m| m.as_str()).unwrap_or_default().to_string();
+        let ticker = captures
+            .get(1)
+            .map(|m| m.as_str())
+            .unwrap_or_default()
+            .to_string();
         let symbolic_expiration = captures.get(3).map(|m| m.as_str()).unwrap_or_default();
         let right = captures.get(4).map(|m| m.as_str()).unwrap_or("C");
         let strike = captures.get(5).map(|m| m.as_str()).unwrap_or("0");
@@ -185,7 +199,10 @@ mod tests {
         assert_eq!(option.ticker(), "FRHC");
         assert_eq!(option.right(), 1);
         assert_eq!(option.strike(), Decimal::from_str("55").unwrap());
-        assert_eq!(option.maturity_date(), NaiveDate::from_ymd_opt(2022, 9, 16).unwrap());
+        assert_eq!(
+            option.maturity_date(),
+            NaiveDate::from_ymd_opt(2022, 9, 16).unwrap()
+        );
         assert_eq!(option.osi(), "FRHC220916C00055000");
         assert_eq!(option.to_string(), "FRHC @ 55 Call 2022-09-16");
     }

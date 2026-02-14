@@ -21,38 +21,56 @@ impl TradernetWebsocket {
     }
 
     /// Subscribes to quote updates for a list of symbols.
-    pub async fn quotes<I, S>(&self, symbols: I) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError>
+    pub async fn quotes<I, S>(
+        &self,
+        symbols: I,
+    ) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError>
     where
         I: IntoIterator<Item = S>,
         S: AsRef<str>,
     {
-        let symbols = symbols.into_iter().map(|s| s.as_ref().to_string()).collect::<Vec<_>>();
+        let symbols = symbols
+            .into_iter()
+            .map(|s| s.as_ref().to_string())
+            .collect::<Vec<_>>();
         let query = serde_json::to_string(&serde_json::json!(["quotes", symbols]))?;
         self.stream_filtered(vec![query], &["q", "error"]).await
     }
 
     /// Subscribes to order book updates for a symbol.
-    pub async fn market_depth(&self, symbol: &str) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
+    pub async fn market_depth(
+        &self,
+        symbol: &str,
+    ) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
         let query = serde_json::to_string(&serde_json::json!(["orderBook", [symbol]]))?;
         self.stream_filtered(vec![query], &["b", "error"]).await
     }
 
     /// Subscribes to portfolio updates.
-    pub async fn portfolio(&self) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
+    pub async fn portfolio(
+        &self,
+    ) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
         let query = serde_json::to_string(&serde_json::json!(["portfolio"]))?;
-        self.stream_filtered(vec![query], &["portfolio", "error"]).await
+        self.stream_filtered(vec![query], &["portfolio", "error"])
+            .await
     }
 
     /// Subscribes to active orders updates.
-    pub async fn orders(&self) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
+    pub async fn orders(
+        &self,
+    ) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
         let query = serde_json::to_string(&serde_json::json!(["orders"]))?;
-        self.stream_filtered(vec![query], &["orders", "error"]).await
+        self.stream_filtered(vec![query], &["orders", "error"])
+            .await
     }
 
     /// Subscribes to markets status updates.
-    pub async fn markets(&self) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
+    pub async fn markets(
+        &self,
+    ) -> Result<BoxStream<'static, Result<Value, TradernetError>>, TradernetError> {
         let query = serde_json::to_string(&serde_json::json!(["markets"]))?;
-        self.stream_filtered(vec![query], &["markets", "error"]).await
+        self.stream_filtered(vec![query], &["markets", "error"])
+            .await
     }
 
     async fn stream_filtered(
@@ -68,7 +86,10 @@ impl TradernetWebsocket {
             write.send(Message::Text(message)).await?;
         }
 
-        let allowed = allowed_events.iter().map(|event| event.to_string()).collect::<HashSet<_>>();
+        let allowed = allowed_events
+            .iter()
+            .map(|event| event.to_string())
+            .collect::<HashSet<_>>();
         let stream = try_stream! {
             while let Some(message) = read.next().await {
                 let message = message?;

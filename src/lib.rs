@@ -17,10 +17,10 @@
 //!
 //! See [`TradernetWebsocket`] for streaming market data.
 
-/// Common networking and string helpers.
-pub mod common;
 /// REST API client built on top of [`Core`].
 pub mod client;
+/// Common networking and string helpers.
+pub mod common;
 /// Core authentication and request utilities.
 pub mod core;
 /// Error types returned by the SDK.

@@ -12,8 +12,8 @@ pub fn stringify(value: &Value) -> Result<String, serde_json::Error> {
 
 /// Generates an HMAC-SHA256 signature for the given message.
 pub fn sign(key: &str, message: &str) -> String {
-    let mut mac = HmacSha256::new_from_slice(key.as_bytes())
-        .expect("HMAC can take key of any size");
+    let mut mac =
+        HmacSha256::new_from_slice(key.as_bytes()).expect("HMAC can take key of any size");
     mac.update(message.as_bytes());
     hex::encode(mac.finalize().into_bytes())
 }

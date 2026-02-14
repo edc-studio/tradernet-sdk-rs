@@ -2,12 +2,12 @@ use crate::common::net_utils::NetUtils;
 use crate::common::string_utils::{sign, stringify};
 use crate::errors::TradernetError;
 use log::{debug, warn};
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use reqwest::Method;
+use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderValue};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// Core Tradernet client that handles authentication and HTTP requests.
@@ -32,7 +32,10 @@ impl Core {
     pub fn new(public: Option<String>, private: Option<String>) -> Result<Self, TradernetError> {
         let net = NetUtils::new(Duration::from_secs(300))?;
         if public.is_none() || private.is_none() {
-            warn!("A keypair was not set. It can be generated here: {}/tradernet-api/auth-api", Self::url());
+            warn!(
+                "A keypair was not set. It can be generated here: {}/tradernet-api/auth-api",
+                Self::url()
+            );
         }
 
         Ok(Self {
@@ -65,14 +68,21 @@ impl Core {
         let private_key = self.private.clone().unwrap_or_default();
 
         HashMap::from([
-            ("X-NtApi-PublicKey".to_string(), self.public.clone().unwrap_or_default()),
+            (
+                "X-NtApi-PublicKey".to_string(),
+                self.public.clone().unwrap_or_default(),
+            ),
             ("X-NtApi-Timestamp".to_string(), timestamp.clone()),
             ("X-NtApi-Sig".to_string(), sign(&private_key, &timestamp)),
         ])
     }
 
     /// Sends an unauthenticated `GET /api` request with a command and params.
-    pub fn plain_request(&self, cmd: &str, params: Option<Map<String, Value>>) -> Result<Value, TradernetError> {
+    pub fn plain_request(
+        &self,
+        cmd: &str,
+        params: Option<Map<String, Value>>,
+    ) -> Result<Value, TradernetError> {
         debug!("Making a simple request to API");
 
         let mut message = Map::new();
@@ -85,7 +95,9 @@ impl Core {
         let url = format!("{}/api", Self::url());
 
         debug!("Query: {:?}", query);
-        let response = self.net.request(Method::GET, &url, None, Some(&query), None)?;
+        let response = self
+            .net
+            .request(Method::GET, &url, None, Some(&query), None)?;
         Ok(response.json()?)
     }
 
@@ -97,7 +109,10 @@ impl Core {
         version: Option<u8>,
     ) -> Result<Value, TradernetError> {
         let public = self.public.as_ref().ok_or(TradernetError::MissingKeypair)?;
-        let private = self.private.as_ref().ok_or(TradernetError::MissingKeypair)?;
+        let private = self
+            .private
+            .as_ref()
+            .ok_or(TradernetError::MissingKeypair)?;
 
         let version = version.unwrap_or(2);
         let params = params.unwrap_or_default();
@@ -125,7 +140,9 @@ impl Core {
         let url = format!("{}/api/{}", Self::url(), cmd);
         debug!("Sending POST to {url}");
 
-        let response = self.net.request(Method::POST, &url, Some(headers), None, Some(payload))?;
+        let response = self
+            .net
+            .request(Method::POST, &url, Some(headers), None, Some(payload))?;
         let result: Value = response.json()?;
 
         if result.get("errMsg").is_some() {
@@ -143,7 +160,10 @@ impl Core {
         version: Option<u8>,
     ) -> Result<reqwest::blocking::Response, TradernetError> {
         let public = self.public.as_ref().ok_or(TradernetError::MissingKeypair)?;
-        let private = self.private.as_ref().ok_or(TradernetError::MissingKeypair)?;
+        let private = self
+            .private
+            .as_ref()
+            .ok_or(TradernetError::MissingKeypair)?;
 
         let version = version.unwrap_or(2);
         if version != 2 && version != 3 {
@@ -166,7 +186,8 @@ impl Core {
 
         let url = format!("{}{}", Self::url(), path);
         debug!("Sending GET to {url}");
-        self.net.request(Method::GET, &url, Some(headers), params, None)
+        self.net
+            .request(Method::GET, &url, Some(headers), params, None)
     }
 
     /// Sends an unauthenticated GET request to an API path.

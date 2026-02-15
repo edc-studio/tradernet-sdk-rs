@@ -1,12 +1,14 @@
 # Tradernet SDK for Rust
 
 Rust SDK for the Tradernet REST and WebSocket APIs. It is inspired by the official
-Python SDK and provides a synchronous REST client, an asynchronous WebSocket
-streaming client, plus helpers for symbols and options.
+Python SDK and provides a synchronous REST client, an asynchronous REST wrapper
+for async runtimes, an asynchronous WebSocket streaming client, plus helpers for
+symbols and options.
 
 ## Features
 
 - REST client with typed helpers for Tradernet endpoints
+- Async REST client for use in async runtimes
 - WebSocket streaming for quotes, order books, portfolio, and markets
 - Helpers for option notation and candle data parsing
 - Simple configuration via INI files
@@ -38,6 +40,23 @@ fn main() -> Result<(), tradernet_sdk_rs::TradernetError> {
     println!("{info:?}");
 
     let quotes = client.get_quotes(["AAPL.US", "TSLA.US"])?;
+    println!("{quotes:?}");
+    Ok(())
+}
+```
+
+## Async REST usage
+
+```rust
+use tradernet_sdk_rs::AsyncTradernet;
+
+#[tokio::main]
+async fn main() -> Result<(), tradernet_sdk_rs::TradernetError> {
+    let client = AsyncTradernet::from_config("tradernet.ini")?;
+    let info = client.user_info().await?;
+    println!("{info:?}");
+
+    let quotes = client.get_quotes(["AAPL.US", "TSLA.US"]).await?;
     println!("{quotes:?}");
     Ok(())
 }

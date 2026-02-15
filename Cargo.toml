@@ -7,6 +7,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["tradernet", "trading", "api", "finance", "websocket"]
 categories = ["api-bindings", "web-programming::http-client"]
+repository = "https://github.com/edc-studio/tradernet-sdk-rs"
 
 [dependencies]
 chrono = { version = "0.4", features = ["std"] }

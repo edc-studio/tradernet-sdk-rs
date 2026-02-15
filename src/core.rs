@@ -389,7 +389,9 @@ impl AsyncCore {
     ) -> Result<reqwest::Response, TradernetError> {
         let url = format!("{}{}", Core::url(), path);
         debug!("Sending GET to {url}");
-        self.net.request(Method::GET, &url, None, params, None).await
+        self.net
+            .request(Method::GET, &url, None, params, None)
+            .await
     }
 
     /// Returns trading sessions for available securities.

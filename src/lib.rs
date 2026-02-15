@@ -17,10 +17,10 @@
 //!
 //! See [`TradernetWebsocket`] for streaming market data.
 
-/// REST API client built on top of [`Core`].
-pub mod client;
 /// Async REST API client built on top of [`Tradernet`].
 pub mod async_client;
+/// REST API client built on top of [`Core`].
+pub mod client;
 /// Common networking and string helpers.
 pub mod common;
 /// Core authentication and request utilities.
@@ -34,8 +34,8 @@ pub mod user_data;
 /// WebSocket streaming client.
 pub mod ws;
 
-pub use crate::client::Tradernet;
 pub use crate::async_client::AsyncTradernet;
+pub use crate::client::Tradernet;
 pub use crate::core::Core;
 pub use crate::errors::TradernetError;
 pub use crate::symbols::tradernet_option::TradernetOption;

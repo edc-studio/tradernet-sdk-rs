@@ -81,11 +81,17 @@ impl AsyncTradernet {
             );
         }
 
-        self.core.plain_request("registerNewUser", Some(params)).await
+        self.core
+            .plain_request("registerNewUser", Some(params))
+            .await
     }
 
     /// Checks missing onboarding fields for the given step and office.
-    pub async fn check_missing_fields(&self, step: i64, office: &str) -> Result<Value, TradernetError> {
+    pub async fn check_missing_fields(
+        &self,
+        step: i64,
+        office: &str,
+    ) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("step".to_string(), Value::Number(step.into()));
         params.insert("office".to_string(), Value::String(office.to_string()));
@@ -105,7 +111,10 @@ impl AsyncTradernet {
 
     /// Returns user data (OPQ) for the authenticated account.
     pub async fn get_user_data(&self) -> Result<UserDataResponse, TradernetError> {
-        let response = self.core.authorized_request("getOPQ", None, Some(2)).await?;
+        let response = self
+            .core
+            .authorized_request("getOPQ", None, Some(2))
+            .await?;
         let response_text = response.to_string();
         let mut deserializer = serde_json::Deserializer::from_str(&response_text);
         let data = serde_path_to_error::deserialize(&mut deserializer).map_err(|error| {
@@ -142,14 +151,19 @@ impl AsyncTradernet {
         limit: i64,
     ) -> Result<Value, TradernetError> {
         let mut params = Map::new();
-        params.insert("type".to_string(), Value::String(instrument_type.to_string()));
+        params.insert(
+            "type".to_string(),
+            Value::String(instrument_type.to_string()),
+        );
         params.insert("exchange".to_string(), Value::String(exchange.to_string()));
         params.insert(
             "gainers".to_string(),
             Value::Number((gainers as i64).into()),
         );
         params.insert("limit".to_string(), Value::Number(limit.into()));
-        self.core.plain_request("getTopSecurities", Some(params)).await
+        self.core
+            .plain_request("getTopSecurities", Some(params))
+            .await
     }
 
     /// Exports securities list with optional fields.
@@ -175,7 +189,10 @@ impl AsyncTradernet {
             }
             params.push(("tickers".to_string(), chunk.join(" ")));
 
-            let response = self.core.get_request("/securities/export", Some(&params)).await?;
+            let response = self
+                .core
+                .get_request("/securities/export", Some(&params))
+                .await?;
             let mut result: Vec<Value> = response.json().await?;
             results.append(&mut result);
         }
@@ -590,11 +607,7 @@ impl AsyncTradernet {
     }
 
     /// Places a trailing stop order.
-    pub async fn trailing_stop(
-        &self,
-        symbol: &str,
-        percent: i64,
-    ) -> Result<Value, TradernetError> {
+    pub async fn trailing_stop(&self, symbol: &str, percent: i64) -> Result<Value, TradernetError> {
         let mut params = Map::new();
         params.insert("instr_name".to_string(), Value::String(symbol.to_string()));
         params.insert(
@@ -757,7 +770,10 @@ impl AsyncTradernet {
         let limit_price = serde_json::Number::from_f64(price)
             .ok_or_else(|| TradernetError::InvalidInput("Invalid price".to_string()))?;
         params.insert("limit_price".to_string(), Value::Number(limit_price));
-        params.insert("expiration_id".to_string(), Value::Number(duration_code.into()));
+        params.insert(
+            "expiration_id".to_string(),
+            Value::Number(duration_code.into()),
+        );
         if let Some(custom_order_id) = custom_order_id {
             params.insert(
                 "user_order_id".to_string(),
@@ -778,7 +794,10 @@ impl AsyncTradernet {
         if name.is_none() || name == Some("all") {
             let mut result = Vec::new();
             for refbook_name in self.refbooks(&reference_date).await? {
-                result.extend(self.get_refbook_named(&reference_date, &refbook_name).await?);
+                result.extend(
+                    self.get_refbook_named(&reference_date, &refbook_name)
+                        .await?,
+                );
             }
             return Ok(result);
         }

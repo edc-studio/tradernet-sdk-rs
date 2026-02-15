@@ -422,7 +422,10 @@ pub struct UserInfo {
     pub inn: Option<String>,
     #[serde(default, deserialize_with = "deserialize_option_string_or_number")]
     pub country: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_option_i64_original_client_user_id")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_option_i64_original_client_user_id"
+    )]
     pub original_client_user_id: Option<i64>,
     #[serde(default, deserialize_with = "deserialize_option_string_or_number")]
     pub contact_id: Option<String>,
@@ -455,10 +458,16 @@ pub struct UserInfo {
     #[serde(rename = "isIpoAvailable")]
     pub is_ipo_available: Option<bool>,
     #[serde(rename = "currentlyAvailableIpos")]
-    #[serde(default, deserialize_with = "deserialize_option_i64_currently_available_ipos")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_option_i64_currently_available_ipos"
+    )]
     pub currently_available_ipos: Option<i64>,
     #[serde(rename = "isSubscribedToNewIpos")]
-    #[serde(default, deserialize_with = "deserialize_option_i64_is_subscribed_to_new_ipos")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_option_i64_is_subscribed_to_new_ipos"
+    )]
     pub is_subscribed_to_new_ipos: Option<i64>,
     #[serde(rename = "isStockBonusAvailable")]
     pub is_stock_bonus_available: Option<bool>,
@@ -503,10 +512,16 @@ pub struct UserInfoDetails {
     pub utm_campaign_to_real: Option<String>,
     #[serde(rename = "utm_campaign - Register")]
     pub utm_campaign_register: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_option_i64_telegram_last_updated_at")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_option_i64_telegram_last_updated_at"
+    )]
     pub telegram_last_updated_at: Option<i64>,
     pub personal_anketa_last_date: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_option_i64_detected_reception_service")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_option_i64_detected_reception_service"
+    )]
     pub detected_reception_service: Option<i64>,
 }
 
@@ -572,8 +587,9 @@ where
     let value = Option::<Value>::deserialize(deserializer)?;
     match value {
         None | Some(Value::Null) => Ok(UserStockLists::default()),
-        Some(Value::Object(map)) => serde_json::from_value(Value::Object(map))
-            .map_err(serde::de::Error::custom),
+        Some(Value::Object(map)) => {
+            serde_json::from_value(Value::Object(map)).map_err(serde::de::Error::custom)
+        }
         Some(Value::Array(items)) => {
             if items.is_empty() {
                 return Ok(UserStockLists::default());
@@ -594,7 +610,7 @@ where
                     _ => {
                         return Err(serde::de::Error::custom(
                             "expected userStockLists as object or array",
-                        ))
+                        ));
                     }
                 }
             }
@@ -678,9 +694,15 @@ make_deserialize_option_i64!(deserialize_option_i64_f_active, "f_active");
 make_deserialize_option_i64!(deserialize_option_i64_f_demo, "f_demo");
 make_deserialize_option_i64!(deserialize_option_i64_status_id, "status_id");
 make_deserialize_option_i64!(deserialize_option_i64_robot, "robot");
-make_deserialize_option_i64!(deserialize_option_i64_additional_status, "additional_status");
+make_deserialize_option_i64!(
+    deserialize_option_i64_additional_status,
+    "additional_status"
+);
 make_deserialize_option_i64!(deserialize_option_i64_reception, "reception");
-make_deserialize_option_i64!(deserialize_option_i64_reception_service, "reception_service");
+make_deserialize_option_i64!(
+    deserialize_option_i64_reception_service,
+    "reception_service"
+);
 make_deserialize_option_i64!(deserialize_option_i64_manager_user_id, "manager_user_id");
 make_deserialize_option_i64!(
     deserialize_option_i64_original_client_user_id,
@@ -723,8 +745,14 @@ make_deserialize_option_i64!(deserialize_option_i64_graphic_type, "graphic_type"
 make_deserialize_option_i64!(deserialize_option_i64_f_transaction, "f_transaction");
 make_deserialize_option_i64!(deserialize_option_i64_f_compare_index, "f_compare_index");
 make_deserialize_option_i64!(deserialize_option_i64_profile_type, "profile_type");
-make_deserialize_option_i64!(deserialize_option_i64_show_portfolio_block, "showPortfolioBlock");
-make_deserialize_option_i64!(deserialize_option_i64_page_first_tab_open, "pageFirstTabOpen");
+make_deserialize_option_i64!(
+    deserialize_option_i64_show_portfolio_block,
+    "showPortfolioBlock"
+);
+make_deserialize_option_i64!(
+    deserialize_option_i64_page_first_tab_open,
+    "pageFirstTabOpen"
+);
 make_deserialize_option_i64!(deserialize_option_i64_access_cost, "access_cost");
 
 fn coerce_i64<E>(value: Value, field: &str) -> Result<i64, E>
@@ -765,9 +793,7 @@ where
 
 fn warn_if_fractional_i64(value: f64, source: &str, field: &str) {
     if (value - value.trunc()).abs() > f64::EPSILON {
-        log::warn!(
-            "i64 field `{field}` received fractional {source} value {value}, truncating"
-        );
+        log::warn!("i64 field `{field}` received fractional {source} value {value}, truncating");
     }
 }
 
@@ -871,10 +897,16 @@ pub struct UserOptions {
     #[serde(default, deserialize_with = "deserialize_option_i64_profile_type")]
     pub profile_type: Option<i64>,
     #[serde(rename = "showPortfolioBlock")]
-    #[serde(default, deserialize_with = "deserialize_option_i64_show_portfolio_block")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_option_i64_show_portfolio_block"
+    )]
     pub show_portfolio_block: Option<i64>,
     #[serde(rename = "pageFirstTabOpen")]
-    #[serde(default, deserialize_with = "deserialize_option_i64_page_first_tab_open")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_option_i64_page_first_tab_open"
+    )]
     pub page_first_tab_open: Option<i64>,
     pub cover: Option<String>,
     #[serde(default, deserialize_with = "deserialize_option_i64_access_cost")]

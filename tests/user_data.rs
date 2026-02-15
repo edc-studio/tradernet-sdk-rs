@@ -62,7 +62,6 @@ fn deserializes_user_data_fixture() {
     );
 }
 
-
 #[test]
 fn deserializes_user_data_with_empty_string_ints() {
     let payload = fs::read_to_string("tests/fixtures/get_user_data.json").unwrap();
@@ -93,7 +92,10 @@ fn deserializes_user_data_with_numeric_optional_string() {
 
     let data: UserDataResponse = serde_json::from_value(value).unwrap();
 
-    assert_eq!(data.opq.user_info.minimum_investment.as_deref(), Some("5000"));
+    assert_eq!(
+        data.opq.user_info.minimum_investment.as_deref(),
+        Some("5000")
+    );
 }
 
 #[test]
@@ -126,8 +128,6 @@ fn deserializes_user_data_with_user_stock_lists_array() {
         vec!["BA.US", "MCD.US"]
     );
 }
-
-
 
 #[test]
 fn warns_on_fractional_i64_with_field_name() {

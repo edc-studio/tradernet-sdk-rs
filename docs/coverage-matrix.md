@@ -1,38 +1,38 @@
-# Матрица покрытия Tradernet SDK (Rust)
+# Tradernet SDK (Rust) Coverage Matrix
 
-Источник данных для сопоставления:
+Data sources for comparison:
 - Rust SDK: `src/client.rs`, `src/core.rs`, `src/ws.rs`, `src/common/*`, `src/symbols/*`
 - Python SDK: `3th-party/tradernet_sdk-2.0.0/tradernet/*`
-- Официальная документация: `https://freedom24.com/tradernet-api/` (страница загружается динамически; идентификаторы примеров/разделов из HTML извлечь не удалось — в матрице отмечено как «не подтверждено»)
+- Official documentation: `https://freedom24.com/tradernet-api/` (the page loads dynamically; example/section identifiers could not be extracted from HTML — marked as “unverified” in the matrix)
 
-Статусы:
-- ✅ реализовано в Rust
-- ⚠️ частично/аналоги (функциональность есть, но отличается интерфейс или доступ через приватные методы Python)
-- ❌ отсутствует
-- ❔ невозможно проверить по официальной документации (динамический контент)
+Statuses:
+- ✅ implemented in Rust
+- ⚠️ partial/analogues (functionality exists but interface differs or access is via Python private methods)
+- ❌ missing
+- ❔ impossible to verify via official documentation (dynamic content)
 
-## Core / авторизация / сетевые запросы
+## Core / authorization / network requests
 
-| Python SDK | Rust SDK | Статус | Примечание |
+| Python SDK | Rust SDK | Status | Notes |
 | --- | --- | --- | --- |
-| `Core.__init__` | `Core::new`, `Tradernet::new` | ✅ | Инициализация по ключам |
-| `Core.from_config` | `Core::from_config`, `Tradernet::from_config` | ✅ | Чтение конфигурации |
-| `Core.url` | `Core::url` | ✅ | Базовый URL |
+| `Core.__init__` | `Core::new`, `Tradernet::new` | ✅ | Initialization with keys |
+| `Core.from_config` | `Core::from_config`, `Tradernet::from_config` | ✅ | Read configuration |
+| `Core.url` | `Core::url` | ✅ | Base URL |
 | `Core.websocket_url` | `Core::websocket_url` | ✅ | WS URL |
-| `Core.websocket_auth` | `Core::websocket_auth` | ✅ | WS параметры авторизации |
-| `Core.plain_request` | `Core::plain_request` | ✅ | Неавторизованный запрос |
-| `Core.authorized_request` | `Core::authorized_request` | ✅ | Авторизованный запрос |
-| `Core.list_security_sessions` | `Core::list_security_sessions` | ✅ | Сессии бумаг |
-| `NetUtils.request` | `NetUtils::request` | ✅ | HTTP‑запросы |
+| `Core.websocket_auth` | `Core::websocket_auth` | ✅ | WS auth parameters |
+| `Core.plain_request` | `Core::plain_request` | ✅ | Unauthorized request |
+| `Core.authorized_request` | `Core::authorized_request` | ✅ | Authorized request |
+| `Core.list_security_sessions` | `Core::list_security_sessions` | ✅ | Security sessions |
+| `NetUtils.request` | `NetUtils::request` | ✅ | HTTP requests |
 | `StringUtils.stringify` | `string_utils::stringify` | ✅ | JSON stringify |
-| `StringUtils.sign` | `string_utils::sign` | ✅ | HMAC‑подпись |
-| `StringUtils.http_build_query` | `string_utils::http_build_query` | ✅ | Query из структуры |
-| `StringUtils.flatten_*` и `str_from_*` | `string_utils` (внутренние функции) | ✅ | В Rust внутренние helpers |
-| `WSUtils.__init__/__ssl_context` | (нет прямого аналога) | ⚠️ | В Rust WS реализован иначе, без SSL‑утилит из Python |
+| `StringUtils.sign` | `string_utils::sign` | ✅ | HMAC signature |
+| `StringUtils.http_build_query` | `string_utils::http_build_query` | ✅ | Query from struct |
+| `StringUtils.flatten_*` and `str_from_*` | `string_utils` (internal functions) | ✅ | Internal helpers in Rust |
+| `WSUtils.__init__/__ssl_context` | (no direct analogue) | ⚠️ | WS in Rust is implemented differently, without Python SSL utilities |
 
-## REST‑клиент (Python `client.py` → Rust `Tradernet`)
+## REST client (Python `client.py` → Rust `Tradernet`)
 
-| Python SDK | Rust SDK | Статус | Примечание |
+| Python SDK | Rust SDK | Status | Notes |
 | --- | --- | --- | --- |
 | `new_user` | `Tradernet::new_user` | ✅ | |
 | `check_missing_fields` | `Tradernet::check_missing_fields` | ✅ | |
@@ -71,37 +71,37 @@
 | `get_historical` | `Tradernet::get_historical` | ✅ | |
 | `trade` | `Tradernet::trade` | ✅ | |
 | `get_tariffs_list` | `Tradernet::get_tariffs_list` | ✅ | |
-| `__refbooks` | `Tradernet::refbooks` | ⚠️ | В Python приватный метод, в Rust публичный |
-| `__get_refbook` | `Tradernet::get_refbook` | ⚠️ | В Python приватный метод, в Rust публичный |
-| `__latest_refbook` | `Tradernet::latest_refbook` | ⚠️ | В Python приватный метод, в Rust публичный |
-| `__extract_zip` | (нет отдельного аналога) | ⚠️ | В Rust разархивация скрыта внутри `get_refbook` |
+| `__refbooks` | `Tradernet::refbooks` | ⚠️ | Private method in Python, public in Rust |
+| `__get_refbook` | `Tradernet::get_refbook` | ⚠️ | Private method in Python, public in Rust |
+| `__latest_refbook` | `Tradernet::latest_refbook` | ⚠️ | Private method in Python, public in Rust |
+| `__extract_zip` | (no separate analogue) | ⚠️ | Decompression is hidden inside `get_refbook` in Rust |
 
 ## WebSocket
 
-| Python SDK | Rust SDK | Статус | Примечание |
+| Python SDK | Rust SDK | Status | Notes |
 | --- | --- | --- | --- |
 | `TradernetWebsocket.quotes` | `TradernetWebsocket::quotes` | ✅ | |
 | `TradernetWebsocket.market_depth` | `TradernetWebsocket::market_depth` | ✅ | |
 | `TradernetWebsocket.portfolio` | `TradernetWebsocket::portfolio` | ✅ | |
 | `TradernetWebsocket.orders` | `TradernetWebsocket::orders` | ✅ | |
 | `TradernetWebsocket.markets` | `TradernetWebsocket::markets` | ✅ | |
-| `TraderNetWSAPI` (deprecated wrapper) | отсутствует | ✅ | Не требуется, Python помечен как deprecated |
+| `TraderNetWSAPI` (deprecated wrapper) | missing | ✅ | Not required, Python marked as deprecated |
 
-## Symbols / опционы
+## Symbols / options
 
-| Python SDK | Rust SDK | Статус | Примечание |
+| Python SDK | Rust SDK | Status | Notes |
 | --- | --- | --- | --- |
-| `TradernetSymbol.get_data` | `TradernetSymbol::get_candles` | ⚠️ | Python возвращает сырой `get_candles`; Rust выделяет данные по тайм‑фреймам |
-| `OptionProperties` (dataclass) | `OptionProperties` (struct) | ✅ | Модель совпадает |
-| `TradernetOption` (parser/formatter) | `TradernetOption` | ✅ | Утилиты работы с опционами |
+| `TradernetSymbol.get_data` | `TradernetSymbol::get_candles` | ⚠️ | Python returns raw `get_candles`; Rust splits data by timeframes |
+| `OptionProperties` (dataclass) | `OptionProperties` (struct) | ✅ | Model matches |
+| `TradernetOption` (parser/formatter) | `TradernetOption` | ✅ | Option utilities |
 
-## Официальная документация API (freedom24)
+## Official API documentation (freedom24)
 
-| Раздел/пример (из документации) | Наличие в Rust | Статус | Примечание |
+| Section/example (from documentation) | Presence in Rust | Status | Notes |
 | --- | --- | --- | --- |
-| Набор примеров/разделов документации | — | ❔ | Документация грузится динамически, идентификаторы примеров извлечь не удалось без JS |
+| Set of documentation examples/sections | — | ❔ | Documentation loads dynamically; example identifiers could not be extracted without JS |
 
-## Резюме
+## Summary
 
-- По сравнению с Python SDK 2.0.0: Rust‑реализация покрывает все публичные методы `client.py`, а также совпадающий набор WebSocket‑подписок. Отличия — в интерфейсе справочников (в Rust публичные методы вместо приватных) и в реализации утилит.
-- По сравнению с официальной документацией: автоматическая выборка списка примеров/разделов без выполнения JS не получилась; требуется либо ручной доступ к документации, либо запрос отдельных JSON‑эндпоинтов, чтобы подтвердить полный охват.
+- Compared to Python SDK 2.0.0: the Rust implementation covers all public methods in `client.py`, and the same set of WebSocket subscriptions. Differences are in the reference book interface (public methods in Rust instead of private) and in utility implementations.
+- Compared to the official documentation: automatic extraction of the list of examples/sections without executing JS did not work; either manual access to the documentation or requests to specific JSON endpoints are required to confirm full coverage.

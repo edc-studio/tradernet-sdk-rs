@@ -1,5 +1,9 @@
 # Tradernet SDK for Rust
 
+[![crates.io](https://img.shields.io/crates/v/tradernet-sdk-rs.svg)](https://crates.io/crates/tradernet-sdk-rs)
+[![docs.rs](https://img.shields.io/docsrs/tradernet-sdk-rs)](https://docs.rs/tradernet-sdk-rs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Rust SDK for the Tradernet REST and WebSocket APIs. It is inspired by the official
 Python SDK and provides a synchronous REST client, an asynchronous REST wrapper
 for async runtimes, an asynchronous WebSocket streaming client, plus helpers for

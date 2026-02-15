@@ -21,6 +21,12 @@ pub enum TradernetError {
     /// JSON serialization/deserialization error.
     #[error("json error: {0}")]
     Json(#[from] Box<serde_json::Error>),
+    /// JSON deserialization error with JSON path.
+    #[error("json error at {path}: {source}")]
+    JsonPath {
+        path: String,
+        source: Box<serde_json::Error>,
+    },
     /// WebSocket transport error.
     #[error("websocket error: {0}")]
     Websocket(#[from] Box<tokio_tungstenite::tungstenite::Error>),

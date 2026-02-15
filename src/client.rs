@@ -103,7 +103,15 @@ impl Tradernet {
     /// Returns user data (OPQ) for the authenticated account.
     pub fn get_user_data(&self) -> Result<UserDataResponse, TradernetError> {
         let response = self.core.authorized_request("getOPQ", None, Some(2))?;
-        Ok(serde_json::from_value(response)?)
+        let response_text = response.to_string();
+        let mut deserializer = serde_json::Deserializer::from_str(&response_text);
+        let data = serde_path_to_error::deserialize(&mut deserializer).map_err(|error| {
+            TradernetError::JsonPath {
+                path: error.path().to_string(),
+                source: Box::new(error.into_inner()),
+            }
+        })?;
+        Ok(data)
     }
 
     /// Returns market status for a given market code.

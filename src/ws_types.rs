@@ -1,6 +1,7 @@
 use crate::user_data::Quote;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
+use std::time::Duration;
 
 /// Typed WebSocket event returned by [`crate::ws::TradernetWebsocket::quotes`].
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,6 +47,81 @@ pub enum MarketsEvent {
     Markets(MarketsUpdate),
     /// Raw error payload from WebSocket (`"error"`).
     Error(Value),
+}
+
+/// Unified subscribe request for [`crate::ws::TradernetWsSession`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SubscribeRequest {
+    /// Subscribe to quote updates for symbols.
+    Quotes { symbols: Vec<String> },
+    /// Subscribe to order book updates for symbols.
+    OrderBook { symbols: Vec<String> },
+    /// Subscribe to portfolio updates.
+    Portfolio,
+    /// Subscribe to active orders updates.
+    Orders,
+    /// Subscribe to markets status updates.
+    Markets,
+}
+
+/// Unified unsubscribe request for [`crate::ws::TradernetWsSession`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UnsubscribeRequest {
+    /// Stop receiving quote updates for symbols.
+    Quotes { symbols: Vec<String> },
+    /// Stop receiving order book updates for symbols.
+    OrderBook { symbols: Vec<String> },
+    /// Stop receiving portfolio updates.
+    Portfolio,
+    /// Stop receiving active orders updates.
+    Orders,
+    /// Stop receiving markets status updates.
+    Markets,
+}
+
+/// Unified event stream item returned by [`crate::ws::TradernetWsSession::events`].
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(clippy::large_enum_variant)]
+pub enum WsEvent {
+    /// Quote update event (`"q"`).
+    Quote(Quote),
+    /// Order book update event (`"b"`).
+    MarketDepth(MarketDepthUpdate),
+    /// Portfolio update event (`"portfolio"`).
+    Portfolio(PortfolioUpdate),
+    /// Active orders update event (`"orders"`).
+    Orders(Vec<OrderDataRow>),
+    /// Market statuses update event (`"markets"`).
+    Markets(MarketsUpdate),
+    /// Raw error payload from WebSocket (`"error"`).
+    Error(Value),
+    /// Session connected.
+    Connected,
+    /// Session is reconnecting.
+    Reconnecting,
+    /// Session closed.
+    Closed,
+}
+
+/// Reconnect strategy for [`crate::ws::TradernetWsSession`].
+#[derive(Debug, Clone, Copy)]
+pub struct WsReconnectConfig {
+    /// Initial delay before the first reconnect attempt.
+    pub initial_delay: Duration,
+    /// Maximum reconnect delay.
+    pub max_delay: Duration,
+    /// Backoff multiplier.
+    pub multiplier: f64,
+}
+
+impl Default for WsReconnectConfig {
+    fn default() -> Self {
+        Self {
+            initial_delay: Duration::from_millis(500),
+            max_delay: Duration::from_secs(10),
+            multiplier: 2.0,
+        }
+    }
 }
 
 /// Markets update payload from Tradernet WebSocket event `markets`.

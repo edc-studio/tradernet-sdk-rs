@@ -79,21 +79,47 @@ fn main() -> Result<(), tradernet_sdk_rs::TradernetError> {
 }
 ```
 
-## WebSocket streaming
+## WebSocket streaming (single connection, multiple subscriptions)
 
 ```rust
 use futures_util::StreamExt;
-use tradernet_sdk_rs::{Core, TradernetWebsocket};
+use tradernet_sdk_rs::{
+    Core, SubscribeRequest, TradernetWebsocket, UnsubscribeRequest, WsEvent,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), tradernet_sdk_rs::TradernetError> {
     let core = Core::from_config("tradernet.ini")?;
     let ws = TradernetWebsocket::new(core);
-    let mut stream = ws.quotes(["AAPL.US", "TSLA.US"]).await?;
+    let session = ws.connect().await?;
 
-    while let Some(message) = stream.next().await {
-        println!("{message:?}");
+    session
+        .subscribe(SubscribeRequest::Quotes {
+            symbols: vec!["AAPL.US".into(), "TSLA.US".into()],
+        })
+        .await?;
+    session.subscribe(SubscribeRequest::Markets).await?;
+    session.subscribe(SubscribeRequest::Portfolio).await?;
+
+    let mut events = session.events();
+    while let Some(event) = events.next().await {
+        match event? {
+            WsEvent::Quote(quote) => println!("quote: {:?}", quote.c),
+            WsEvent::Markets(markets) => println!("markets: {}", markets.t),
+            WsEvent::Portfolio(_) => println!("portfolio update"),
+            WsEvent::Reconnecting => println!("reconnecting..."),
+            WsEvent::Connected => println!("connected"),
+            WsEvent::Closed => break,
+            _ => {}
+        }
     }
+
+    session
+        .unsubscribe(UnsubscribeRequest::Quotes {
+            symbols: vec!["AAPL.US".into()],
+        })
+        .await?;
+    session.close().await?;
     Ok(())
 }
 ```

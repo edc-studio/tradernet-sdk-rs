@@ -43,9 +43,10 @@ pub use crate::errors::TradernetError;
 pub use crate::symbols::tradernet_option::TradernetOption;
 pub use crate::symbols::tradernet_symbol::TradernetSymbol;
 pub use crate::user_data::UserDataResponse;
-pub use crate::ws::TradernetWebsocket;
+pub use crate::ws::{TradernetWebsocket, TradernetWsSession};
 pub use crate::ws_types::{
     MarketDepthEvent, MarketDepthRow, MarketDepthSide, MarketDepthUpdate, MarketInfoRow,
     MarketsEvent, MarketsUpdate, OrderDataRow, OrderTradeInfo, OrdersEvent, PortfolioAccountRow,
     PortfolioEvent, PortfolioPositionRow, PortfolioTradeRow, PortfolioUpdate, QuoteEvent,
+    SubscribeRequest, UnsubscribeRequest, WsEvent, WsReconnectConfig,
 };

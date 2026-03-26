@@ -301,6 +301,7 @@ pub struct MarketsWrapper {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Markets {
     pub t: String,
+    #[serde(deserialize_with = "deserialize_markets_vec")]
     pub m: Vec<Market>,
 }
 
@@ -631,6 +632,25 @@ where
             "expected userStockLists as object or array",
         )),
     }
+}
+
+fn deserialize_markets_vec<'de, D>(deserializer: D) -> Result<Vec<Market>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let values = Vec::<Value>::deserialize(deserializer)?;
+    let mut markets = Vec::with_capacity(values.len());
+
+    for (index, value) in values.into_iter().enumerate() {
+        match serde_json::from_value::<Market>(value) {
+            Ok(market) => markets.push(market),
+            Err(err) => {
+                log::warn!("skipping malformed market entry at index {index}: {err}");
+            }
+        }
+    }
+
+    Ok(markets)
 }
 
 macro_rules! make_deserialize_i64 {

@@ -113,6 +113,21 @@ fn deserializes_user_data_with_numeric_market_date() {
 }
 
 #[test]
+fn deserializes_user_data_with_malformed_market_entry() {
+    let payload = fs::read_to_string("tests/fixtures/get_user_data.json").unwrap();
+    let mut value: serde_json::Value = serde_json::from_str(&payload).unwrap();
+    let original_len = value["OPQ"]["markets"]["markets"]["m"]
+        .as_array()
+        .unwrap()
+        .len();
+    value["OPQ"]["markets"]["markets"]["m"][0] = serde_json::json!([]);
+
+    let data: UserDataResponse = serde_json::from_value(value).unwrap();
+
+    assert_eq!(data.opq.markets.markets.m.len(), original_len - 1);
+}
+
+#[test]
 fn deserializes_user_data_with_user_stock_lists_array() {
     let payload = fs::read_to_string("tests/fixtures/get_user_data.json").unwrap();
     let mut value: serde_json::Value = serde_json::from_str(&payload).unwrap();

@@ -50,7 +50,7 @@ fn ws_session_handles_all_subscriptions_on_single_connection() {
     let addr = std_listener.local_addr().expect("local addr");
 
     let core = Core::new(None, None).expect("core");
-    let ws = TradernetWebsocket::with_websocket_url(core, format!("ws://{}", addr));
+    let ws = TradernetWebsocket::from_core(&core).with_websocket_url(format!("ws://{}", addr));
 
     runtime().block_on(async move {
         let listener = TcpListener::from_std(std_listener).expect("tokio listener");
@@ -187,7 +187,7 @@ fn ws_session_reconnects_restores_subscriptions_and_applies_local_unsubscribe_fi
     let addr = std_listener.local_addr().expect("local addr");
 
     let core = Core::new(None, None).expect("core");
-    let ws = TradernetWebsocket::with_websocket_url(core, format!("ws://{}", addr));
+    let ws = TradernetWebsocket::from_core(&core).with_websocket_url(format!("ws://{}", addr));
 
     runtime().block_on(async move {
         let listener = TcpListener::from_std(std_listener).expect("tokio listener");
@@ -377,7 +377,7 @@ fn legacy_quotes_method_works_via_session_wrapper() {
     let addr = std_listener.local_addr().expect("local addr");
 
     let core = Core::new(None, None).expect("core");
-    let ws = TradernetWebsocket::with_websocket_url(core, format!("ws://{}", addr));
+    let ws = TradernetWebsocket::from_core(&core).with_websocket_url(format!("ws://{}", addr));
 
     runtime().block_on(async move {
         let listener = TcpListener::from_std(std_listener).expect("tokio listener");

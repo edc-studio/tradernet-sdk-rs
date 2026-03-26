@@ -90,7 +90,7 @@ use tradernet_sdk_rs::{
 #[tokio::main]
 async fn main() -> Result<(), tradernet_sdk_rs::TradernetError> {
     let core = Core::from_config("tradernet.ini")?;
-    let ws = TradernetWebsocket::new(core);
+    let ws = TradernetWebsocket::from_core(&core);
     let session = ws.connect().await?;
 
     session

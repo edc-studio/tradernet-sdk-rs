@@ -18,6 +18,15 @@ pub struct Core {
     net: NetUtils,
 }
 
+/// Lightweight credentials used to authenticate WebSocket connections.
+#[derive(Debug, Clone, Default)]
+pub struct WsCredentials {
+    /// Public API key.
+    pub public: Option<String>,
+    /// Private API key.
+    pub private: Option<String>,
+}
+
 /// Async Core Tradernet client that handles authentication and HTTP requests.
 pub struct AsyncCore {
     /// Public API key.
@@ -72,17 +81,15 @@ impl Core {
 
     /// Builds authentication query parameters for WebSocket connections.
     pub fn websocket_auth(&self) -> HashMap<String, String> {
-        let timestamp = current_timestamp();
-        let private_key = self.private.clone().unwrap_or_default();
+        self.ws_credentials().websocket_auth()
+    }
 
-        HashMap::from([
-            (
-                "X-NtApi-PublicKey".to_string(),
-                self.public.clone().unwrap_or_default(),
-            ),
-            ("X-NtApi-Timestamp".to_string(), timestamp.clone()),
-            ("X-NtApi-Sig".to_string(), sign(&private_key, &timestamp)),
-        ])
+    /// Returns lightweight credentials for WebSocket authentication.
+    pub fn ws_credentials(&self) -> WsCredentials {
+        WsCredentials {
+            public: self.public.clone(),
+            private: self.private.clone(),
+        }
     }
 
     /// Sends an unauthenticated `GET /api` request with a command and params.
@@ -252,6 +259,21 @@ impl AsyncCore {
 
     /// Builds authentication query parameters for WebSocket connections.
     pub fn websocket_auth(&self) -> HashMap<String, String> {
+        self.ws_credentials().websocket_auth()
+    }
+
+    /// Returns lightweight credentials for WebSocket authentication.
+    pub fn ws_credentials(&self) -> WsCredentials {
+        WsCredentials {
+            public: self.public.clone(),
+            private: self.private.clone(),
+        }
+    }
+}
+
+impl WsCredentials {
+    /// Builds authentication query parameters for WebSocket connections.
+    pub fn websocket_auth(&self) -> HashMap<String, String> {
         let timestamp = current_timestamp();
         let private_key = self.private.clone().unwrap_or_default();
 
@@ -264,7 +286,9 @@ impl AsyncCore {
             ("X-NtApi-Sig".to_string(), sign(&private_key, &timestamp)),
         ])
     }
+}
 
+impl AsyncCore {
     /// Sends an unauthenticated `GET /api` request with a command and params.
     pub async fn plain_request(
         &self,

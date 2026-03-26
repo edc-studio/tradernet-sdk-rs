@@ -1,4 +1,4 @@
-use crate::core::Core;
+use crate::core::{AsyncCore, Core, WsCredentials};
 use crate::errors::TradernetError;
 use crate::user_data::Quote;
 use crate::ws_types::{
@@ -22,7 +22,7 @@ use url::Url;
 
 /// WebSocket client for streaming Tradernet market data.
 pub struct TradernetWebsocket {
-    core: Core,
+    credentials: WsCredentials,
     websocket_url_override: Option<String>,
 }
 
@@ -218,20 +218,53 @@ fn remove_symbols(target: &mut HashSet<String>, symbols: Vec<String>) -> Vec<Str
 }
 
 impl TradernetWebsocket {
-    /// Creates a new WebSocket client using an authenticated [`Core`].
-    pub fn new(core: Core) -> Self {
+    /// Creates a new WebSocket client from optional API keys.
+    pub fn new(public: Option<String>, private: Option<String>) -> Self {
         Self {
-            core,
+            credentials: WsCredentials { public, private },
             websocket_url_override: None,
         }
     }
 
-    /// Creates a WebSocket client with custom endpoint URL.
+    /// Creates a new WebSocket client from [`Core`] credentials.
+    pub fn from_core(core: &Core) -> Self {
+        Self {
+            credentials: core.ws_credentials(),
+            websocket_url_override: None,
+        }
+    }
+
+    /// Creates a new WebSocket client from [`AsyncCore`] credentials.
+    pub fn from_async_core(core: &AsyncCore) -> Self {
+        Self {
+            credentials: core.ws_credentials(),
+            websocket_url_override: None,
+        }
+    }
+
+    /// Overrides WebSocket endpoint URL.
     ///
     /// Useful for tests with local/mock WebSocket servers.
-    pub fn with_websocket_url(core: Core, websocket_url: impl Into<String>) -> Self {
+    pub fn with_websocket_url(mut self, websocket_url: impl Into<String>) -> Self {
+        self.websocket_url_override = Some(websocket_url.into());
+        self
+    }
+
+    /// Creates a WebSocket client from [`Core`] with custom endpoint URL.
+    pub fn with_websocket_url_from_core(core: &Core, websocket_url: impl Into<String>) -> Self {
         Self {
-            core,
+            credentials: core.ws_credentials(),
+            websocket_url_override: Some(websocket_url.into()),
+        }
+    }
+
+    /// Creates a WebSocket client from [`AsyncCore`] with custom endpoint URL.
+    pub fn with_websocket_url_from_async_core(
+        core: &AsyncCore,
+        websocket_url: impl Into<String>,
+    ) -> Self {
+        Self {
+            credentials: core.ws_credentials(),
             websocket_url_override: Some(websocket_url.into()),
         }
     }
@@ -388,7 +421,7 @@ impl TradernetWebsocket {
             .clone()
             .unwrap_or_else(Core::websocket_url);
         let mut url = Url::parse(&base_url)?;
-        let params = self.core.websocket_auth();
+        let params = self.credentials.websocket_auth();
         for (key, value) in params {
             url.query_pairs_mut().append_pair(&key, &value);
         }

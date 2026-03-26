@@ -38,7 +38,7 @@ pub mod ws_types;
 
 pub use crate::async_client::AsyncTradernet;
 pub use crate::client::Tradernet;
-pub use crate::core::Core;
+pub use crate::core::{Core, WsCredentials};
 pub use crate::errors::TradernetError;
 pub use crate::symbols::tradernet_option::TradernetOption;
 pub use crate::symbols::tradernet_symbol::TradernetSymbol;

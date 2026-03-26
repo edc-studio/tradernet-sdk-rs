@@ -16,11 +16,11 @@ impl Log for TestLogger {
     }
 
     fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            if let Some(logs) = LOGS.get() {
-                let mut logs = logs.lock().unwrap();
-                logs.push(format!("{}", record.args()));
-            }
+        if self.enabled(record.metadata())
+            && let Some(logs) = LOGS.get()
+        {
+            let mut logs = logs.lock().unwrap();
+            logs.push(format!("{}", record.args()));
         }
     }
 

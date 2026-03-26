@@ -33,6 +33,8 @@ pub mod symbols;
 pub mod user_data;
 /// WebSocket streaming client.
 pub mod ws;
+/// Typed WebSocket events and payloads.
+pub mod ws_types;
 
 pub use crate::async_client::AsyncTradernet;
 pub use crate::client::Tradernet;
@@ -42,3 +44,8 @@ pub use crate::symbols::tradernet_option::TradernetOption;
 pub use crate::symbols::tradernet_symbol::TradernetSymbol;
 pub use crate::user_data::UserDataResponse;
 pub use crate::ws::TradernetWebsocket;
+pub use crate::ws_types::{
+    MarketDepthEvent, MarketDepthRow, MarketDepthSide, MarketDepthUpdate, MarketInfoRow,
+    MarketsEvent, MarketsUpdate, OrderDataRow, OrderTradeInfo, OrdersEvent, PortfolioAccountRow,
+    PortfolioEvent, PortfolioPositionRow, PortfolioTradeRow, PortfolioUpdate, QuoteEvent,
+};

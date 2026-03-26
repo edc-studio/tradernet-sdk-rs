@@ -50,6 +50,8 @@ pub struct Quote {
     pub acd: Option<f64>,
     #[serde(default, deserialize_with = "deserialize_option_i64_baf")]
     pub baf: Option<i64>,
+    #[serde(default, deserialize_with = "deserialize_option_string_or_number")]
+    pub bac: Option<String>,
     #[serde(default, deserialize_with = "deserialize_option_f64")]
     pub bap: Option<f64>,
     #[serde(default, deserialize_with = "deserialize_option_f64")]
@@ -62,6 +64,8 @@ pub struct Quote {
     pub base_ltr: Option<String>,
     #[serde(default, deserialize_with = "deserialize_option_i64_bbf")]
     pub bbf: Option<i64>,
+    #[serde(default, deserialize_with = "deserialize_option_string_or_number")]
+    pub bbc: Option<String>,
     #[serde(default, deserialize_with = "deserialize_option_f64")]
     pub bbp: Option<f64>,
     #[serde(default, deserialize_with = "deserialize_option_f64")]
@@ -85,7 +89,11 @@ pub struct Quote {
     pub cpn: Option<f64>,
     #[serde(default, deserialize_with = "deserialize_option_i64_cpp")]
     pub cpp: Option<i64>,
-    #[serde(default, deserialize_with = "deserialize_option_i64_dpb")]
+    #[serde(
+        alias = "dpd",
+        default,
+        deserialize_with = "deserialize_option_i64_dpb"
+    )]
     pub dpb: Option<i64>,
     #[serde(default, deserialize_with = "deserialize_option_i64_dps")]
     pub dps: Option<i64>,
@@ -103,6 +111,8 @@ pub struct Quote {
     pub ltr: Option<String>,
     #[serde(default, deserialize_with = "deserialize_option_f64")]
     pub lts: Option<f64>,
+    #[serde(default, deserialize_with = "deserialize_option_string_or_number")]
+    pub ltc: Option<String>,
     pub ltt: Option<String>,
     #[serde(rename = "marketStatus")]
     pub market_status: Option<String>,

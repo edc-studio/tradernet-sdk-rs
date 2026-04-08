@@ -2,6 +2,7 @@ use crate::candles::{CandlesResponse, SymbolCandles, parse_candles_response};
 use crate::common::client_helpers;
 use crate::core::{AsyncCore, Core};
 use crate::errors::TradernetError;
+use crate::trades_history::{TradesHistoryResponse, parse_trades_history_response};
 use crate::user_data::UserDataResponse;
 use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, NaiveTime};
 use serde_json::{Map, Value};
@@ -340,24 +341,65 @@ impl AsyncTradernet {
         symbol: Option<&str>,
         currency: Option<&str>,
     ) -> Result<Value, TradernetError> {
-        let mut params = Map::new();
-        params.insert("beginDate".to_string(), Value::String(start.to_string()));
-        params.insert("endDate".to_string(), Value::String(end.to_string()));
-        if let Some(trade_id) = trade_id {
-            params.insert("tradeId".to_string(), Value::Number(trade_id.into()));
-        }
-        if let Some(limit) = limit {
-            params.insert("max".to_string(), Value::Number(limit.into()));
-        }
-        if let Some(symbol) = symbol {
-            params.insert("nt_ticker".to_string(), Value::String(symbol.to_string()));
-        }
-        if let Some(currency) = currency {
-            params.insert("curr".to_string(), Value::String(currency.to_string()));
-        }
+        self.get_trades_history_with_reception(start, end, trade_id, limit, symbol, currency, None)
+            .await
+    }
+
+    /// Returns typed trade history.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn get_trades_history_typed(
+        &self,
+        start: NaiveDate,
+        end: NaiveDate,
+        trade_id: Option<i64>,
+        limit: Option<i64>,
+        symbol: Option<&str>,
+        currency: Option<&str>,
+    ) -> Result<TradesHistoryResponse, TradernetError> {
+        self.get_trades_history_with_reception_typed(
+            start, end, trade_id, limit, symbol, currency, None,
+        )
+        .await
+    }
+
+    /// Returns trade history with optional reception (office id) filter.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn get_trades_history_with_reception(
+        &self,
+        start: NaiveDate,
+        end: NaiveDate,
+        trade_id: Option<i64>,
+        limit: Option<i64>,
+        symbol: Option<&str>,
+        currency: Option<&str>,
+        reception: Option<i64>,
+    ) -> Result<Value, TradernetError> {
+        let params = client_helpers::build_trades_history_params(
+            start, end, trade_id, limit, symbol, currency, reception,
+        )?;
         self.core
             .authorized_request("getTradesHistory", Some(params), Some(2))
             .await
+    }
+
+    /// Returns typed trade history with optional reception (office id) filter.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn get_trades_history_with_reception_typed(
+        &self,
+        start: NaiveDate,
+        end: NaiveDate,
+        trade_id: Option<i64>,
+        limit: Option<i64>,
+        symbol: Option<&str>,
+        currency: Option<&str>,
+        reception: Option<i64>,
+    ) -> Result<TradesHistoryResponse, TradernetError> {
+        let response = self
+            .get_trades_history_with_reception(
+                start, end, trade_id, limit, symbol, currency, reception,
+            )
+            .await?;
+        parse_trades_history_response(response)
     }
 
     /// Finds a symbol by query and optional exchange.

@@ -31,6 +31,8 @@ pub mod core;
 pub mod errors;
 /// Symbols and options helpers.
 pub mod symbols;
+/// Typed responses for getTradesHistory.
+pub mod trades_history;
 /// Typed responses for get_user_data.
 pub mod user_data;
 /// WebSocket streaming client.
@@ -48,6 +50,10 @@ pub use crate::core::{Core, WsCredentials};
 pub use crate::errors::TradernetError;
 pub use crate::symbols::tradernet_option::TradernetOption;
 pub use crate::symbols::tradernet_symbol::TradernetSymbol;
+pub use crate::trades_history::{
+    MaxTradeIdRow, TradeRow, TradesHistoryApiError, TradesHistoryResponse,
+    parse_trades_history_api_error, parse_trades_history_response,
+};
 pub use crate::user_data::UserDataResponse;
 pub use crate::ws::{TradernetWebsocket, TradernetWsSession};
 pub use crate::ws_types::{

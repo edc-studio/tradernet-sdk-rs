@@ -17,3 +17,29 @@ fn client_get_candles_series_reports_missing_keys() {
 
     assert!(matches!(error, TradernetError::MissingKeypair));
 }
+
+#[test]
+fn client_get_trades_history_with_reception_validates_input() {
+    let client = Tradernet::new(None, None).expect("client should be created");
+    let start = NaiveDate::from_ymd_opt(2026, 1, 1).expect("valid date");
+    let end = NaiveDate::from_ymd_opt(2026, 1, 31).expect("valid date");
+
+    let error = client
+        .get_trades_history_with_reception(start, end, None, Some(-1), None, None, Some(1))
+        .expect_err("negative limit must be rejected");
+
+    assert!(matches!(error, TradernetError::InvalidInput(_)));
+}
+
+#[test]
+fn client_get_trades_history_typed_validates_input() {
+    let client = Tradernet::new(None, None).expect("client should be created");
+    let start = NaiveDate::from_ymd_opt(2026, 1, 1).expect("valid date");
+    let end = NaiveDate::from_ymd_opt(2026, 1, 31).expect("valid date");
+
+    let error = client
+        .get_trades_history_typed(start, end, None, Some(-1), None, None)
+        .expect_err("negative limit must be rejected");
+
+    assert!(matches!(error, TradernetError::InvalidInput(_)));
+}

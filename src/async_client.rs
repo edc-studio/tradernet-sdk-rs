@@ -1,4 +1,4 @@
-use crate::candles::{CandlesResponse, parse_candles_response};
+use crate::candles::{CandlesResponse, SymbolCandles, parse_candles_response};
 use crate::common::client_helpers;
 use crate::core::{AsyncCore, Core};
 use crate::errors::TradernetError;
@@ -282,6 +282,33 @@ impl AsyncTradernet {
             .get_candles_with_count(symbol, start, end, timeframe_seconds, count)
             .await?;
         parse_candles_response(response)
+    }
+
+    /// Returns normalized candle series for a symbol.
+    pub async fn get_candles_series(
+        &self,
+        symbol: &str,
+        start: NaiveDateTime,
+        end: NaiveDateTime,
+        timeframe_seconds: i64,
+    ) -> Result<SymbolCandles, TradernetError> {
+        self.get_candles_with_count_series(symbol, start, end, timeframe_seconds, -1)
+            .await
+    }
+
+    /// Returns normalized candle series for a symbol with explicit `count`.
+    pub async fn get_candles_with_count_series(
+        &self,
+        symbol: &str,
+        start: NaiveDateTime,
+        end: NaiveDateTime,
+        timeframe_seconds: i64,
+        count: i64,
+    ) -> Result<SymbolCandles, TradernetError> {
+        let response = self
+            .get_candles_with_count_typed(symbol, start, end, timeframe_seconds, count)
+            .await?;
+        Ok(response.series_for_symbol(symbol))
     }
 
     /// Returns quote data for a list of symbols.

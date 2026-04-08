@@ -14,7 +14,7 @@ symbols and options.
 - REST client with typed helpers for Tradernet endpoints
 - Async REST client for use in async runtimes
 - WebSocket streaming for quotes, order books, portfolio, and markets
-- Helpers for option notation and candle data parsing
+- Helpers for option notation and normalized candle series
 - Simple configuration via INI files
 
 ## Installation
@@ -153,6 +153,33 @@ fn main() -> Result<(), tradernet_sdk_rs::TradernetError> {
     Ok(())
 }
 ```
+
+## Typed candles series
+
+```rust
+use chrono::NaiveDate;
+use tradernet_sdk_rs::Tradernet;
+
+fn main() -> Result<(), tradernet_sdk_rs::TradernetError> {
+    let client = Tradernet::from_config("tradernet.ini")?;
+    let start = NaiveDate::from_ymd_opt(2024, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap();
+    let end = NaiveDate::from_ymd_opt(2024, 1, 31).unwrap().and_hms_opt(0, 0, 0).unwrap();
+
+    let series = client.get_candles_series("AAPL.US", start, end, 86_400)?;
+    for candle in series.items.iter().take(3) {
+        println!(
+            "{} o={} h={} l={} c={} v={}",
+            candle.ts, candle.open, candle.high, candle.low, candle.close, candle.volume
+        );
+    }
+    Ok(())
+}
+```
+
+`CandlesResponse::series_for_symbol` alignment policy:
+- base length is `min(xSeries.len(), hloc.len())`
+- missing volume values are filled with `0`
+- extra tail elements in source arrays are ignored
 
 ## Documentation
 

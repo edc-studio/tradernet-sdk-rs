@@ -40,8 +40,8 @@ pub mod ws_types;
 
 pub use crate::async_client::AsyncTradernet;
 pub use crate::candles::{
-    CandleInfo, CandleOhlc, CandlesApiError, CandlesResponse, parse_candles_api_error,
-    parse_candles_response,
+    CandleInfo, CandleOhlc, CandlePoint, CandlesApiError, CandlesResponse, SymbolCandles,
+    parse_candles_api_error, parse_candles_response,
 };
 pub use crate::client::Tradernet;
 pub use crate::core::{Core, WsCredentials};

@@ -30,6 +30,30 @@ pub struct CandlesResponse {
     pub took: f64,
 }
 
+/// Normalized candle row.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct CandlePoint {
+    /// Candle timestamp in Unix seconds.
+    pub ts: i64,
+    /// Open price.
+    pub open: f64,
+    /// High price.
+    pub high: f64,
+    /// Low price.
+    pub low: f64,
+    /// Close price.
+    pub close: f64,
+    /// Candle volume.
+    pub volume: i64,
+}
+
+/// Normalized candle series for one symbol.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct SymbolCandles {
+    pub symbol: String,
+    pub items: Vec<CandlePoint>,
+}
+
 /// A single candle in `[high, low, open, close]` form.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct CandleOhlc {
@@ -65,6 +89,40 @@ pub struct CandleInfo {
 pub struct CandlesApiError {
     pub code: i64,
     pub message: String,
+}
+
+impl CandlesResponse {
+    /// Builds a normalized candle series for a symbol.
+    ///
+    /// Alignment policy:
+    /// - base series length is `min(xSeries.len(), hloc.len())`;
+    /// - if volume row is missing at index `i`, `volume` is set to `0`;
+    /// - extra tail elements in any source array are ignored.
+    pub fn series_for_symbol(&self, symbol: &str) -> SymbolCandles {
+        let timestamps = self.x_series.get(symbol).cloned().unwrap_or_default();
+        let candles = self.hloc.get(symbol).cloned().unwrap_or_default();
+        let volumes = self.vl.get(symbol).cloned().unwrap_or_default();
+
+        let len = timestamps.len().min(candles.len());
+        let mut items = Vec::with_capacity(len);
+
+        for index in 0..len {
+            let row = &candles[index];
+            items.push(CandlePoint {
+                ts: timestamps[index],
+                open: row.open,
+                high: row.high,
+                low: row.low,
+                close: row.close,
+                volume: volumes.get(index).copied().unwrap_or(0),
+            });
+        }
+
+        SymbolCandles {
+            symbol: symbol.to_string(),
+            items,
+        }
+    }
 }
 
 /// Parses raw `getHloc` JSON into [`CandlesResponse`] and surfaces method-level API errors.
@@ -317,7 +375,10 @@ fn parse_string(value: Option<&Value>) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{CandlesResponse, parse_candles_api_error, parse_candles_response};
+    use super::{
+        CandlePoint, CandlesResponse, SymbolCandles, parse_candles_api_error,
+        parse_candles_response,
+    };
     use serde_json::json;
 
     #[test]
@@ -412,5 +473,78 @@ mod tests {
                 .to_string()
                 .contains("api method error (7): Пользователь не найден")
         );
+    }
+
+    #[test]
+    fn series_for_symbol_builds_normalized_points() {
+        let payload = json!({
+            "hloc": {"AAPL.US": [[10.5, 9.8, 10.0, 10.2], [10.9, 10.1, 10.2, 10.7]]},
+            "vl": {"AAPL.US": [1000, 1200]},
+            "xSeries": {"AAPL.US": [1700000000, 1700003600]}
+        });
+        let response = parse_candles_response(payload).expect("must parse candles");
+
+        let series = response.series_for_symbol("AAPL.US");
+        assert_eq!(
+            series,
+            SymbolCandles {
+                symbol: "AAPL.US".to_string(),
+                items: vec![
+                    CandlePoint {
+                        ts: 1_700_000_000,
+                        open: 10.0,
+                        high: 10.5,
+                        low: 9.8,
+                        close: 10.2,
+                        volume: 1000,
+                    },
+                    CandlePoint {
+                        ts: 1_700_003_600,
+                        open: 10.2,
+                        high: 10.9,
+                        low: 10.1,
+                        close: 10.7,
+                        volume: 1200,
+                    },
+                ],
+            }
+        );
+    }
+
+    #[test]
+    fn series_for_symbol_is_lossy_on_mixed_types() {
+        let payload = json!({
+            "hloc": {"AAPL.US": [[10.5, "9.8", "10.0", false], ["bad", 10.1, 10.2, 10.7]]},
+            "vl": {"AAPL.US": ["1000", true]},
+            "xSeries": {"AAPL.US": ["1700000000", 1700003600.9]}
+        });
+        let response = parse_candles_response(payload).expect("must parse candles");
+
+        let series = response.series_for_symbol("AAPL.US");
+        assert_eq!(series.items.len(), 2);
+        assert_eq!(series.items[0].ts, 1_700_000_000);
+        assert_eq!(series.items[0].open, 10.0);
+        assert_eq!(series.items[0].close, 0.0);
+        assert_eq!(series.items[0].volume, 1000);
+        assert_eq!(series.items[1].ts, 1_700_003_600);
+        assert_eq!(series.items[1].high, 0.0);
+        assert_eq!(series.items[1].volume, 1);
+    }
+
+    #[test]
+    fn series_for_symbol_handles_length_mismatch_predictably() {
+        let payload = json!({
+            "hloc": {"AAPL.US": [[11.0, 9.0, 10.0, 10.5], [12.0, 10.0, 10.5, 11.1], [13.0, 11.0, 11.1, 12.2]]},
+            "vl": {"AAPL.US": [100]},
+            "xSeries": {"AAPL.US": [1700000000, 1700003600]}
+        });
+        let response = parse_candles_response(payload).expect("must parse candles");
+
+        let series = response.series_for_symbol("AAPL.US");
+        assert_eq!(series.items.len(), 2);
+        assert_eq!(series.items[0].volume, 100);
+        assert_eq!(series.items[1].volume, 0);
+        assert_eq!(series.items[1].ts, 1_700_003_600);
+        assert_eq!(series.items[1].close, 11.1);
     }
 }

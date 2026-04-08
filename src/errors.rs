@@ -12,6 +12,9 @@ pub enum TradernetError {
     /// Invalid input passed to an SDK method.
     #[error("invalid input: {0}")]
     InvalidInput(String),
+    /// API method-level error returned by backend (`code` + message).
+    #[error("api method error ({code}): {message}")]
+    ApiMethodError { code: i64, message: String },
     /// HTTP transport error.
     #[error("http error: {0}")]
     Http(#[from] Box<reqwest::Error>),

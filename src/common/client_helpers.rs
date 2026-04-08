@@ -1,4 +1,5 @@
 use crate::errors::TradernetError;
+use chrono::NaiveDateTime;
 use regex::Regex;
 use serde_json::{Map, Value};
 use std::io::Read;
@@ -89,6 +90,63 @@ pub(crate) fn build_trailing_stop_params(symbol: &str, percent: i64) -> Map<Stri
     params
 }
 
+pub(crate) fn build_candles_params(
+    symbol: &str,
+    start: NaiveDateTime,
+    end: NaiveDateTime,
+    timeframe_seconds: i64,
+    count: i64,
+) -> Result<Map<String, Value>, TradernetError> {
+    if symbol.trim().is_empty() {
+        return Err(TradernetError::InvalidInput(
+            "Symbol cannot be empty".to_string(),
+        ));
+    }
+    if end < start {
+        return Err(TradernetError::InvalidInput(
+            "date_to cannot be earlier than date_from".to_string(),
+        ));
+    }
+    if count >= 0 {
+        return Err(TradernetError::InvalidInput(
+            "count must be negative (-1 means no extra candles)".to_string(),
+        ));
+    }
+    if timeframe_seconds <= 0 || timeframe_seconds % 60 != 0 {
+        return Err(TradernetError::InvalidInput(
+            "timeframe must be a positive number of seconds divisible by 60".to_string(),
+        ));
+    }
+
+    let timeframe_minutes = timeframe_seconds / 60;
+    if !matches!(timeframe_minutes, 1 | 5 | 15 | 60 | 1440) {
+        return Err(TradernetError::InvalidInput(
+            "unsupported timeframe, allowed values: 60, 300, 900, 3600, 86400 seconds".to_string(),
+        ));
+    }
+
+    let mut params = Map::new();
+    params.insert("id".to_string(), Value::String(symbol.to_string()));
+    params.insert("count".to_string(), Value::Number(count.into()));
+    params.insert(
+        "timeframe".to_string(),
+        Value::Number(timeframe_minutes.into()),
+    );
+    params.insert(
+        "date_from".to_string(),
+        Value::String(start.format("%d.%m.%Y %H:%M").to_string()),
+    );
+    params.insert(
+        "date_to".to_string(),
+        Value::String(end.format("%d.%m.%Y %H:%M").to_string()),
+    );
+    params.insert(
+        "intervalMode".to_string(),
+        Value::String("ClosedRay".to_string()),
+    );
+    Ok(params)
+}
+
 pub(crate) fn build_take_profit_params(
     symbol: &str,
     price: f64,
@@ -141,4 +199,67 @@ pub(crate) fn parse_refbooks(content: &str) -> Result<Vec<String>, TradernetErro
     result.sort();
     result.dedup();
     Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::build_candles_params;
+    use chrono::{NaiveDate, NaiveTime};
+
+    #[test]
+    fn build_candles_params_builds_closed_ray_payload() {
+        let start = NaiveDate::from_ymd_opt(2026, 1, 1)
+            .expect("valid date")
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("valid time"));
+        let end = NaiveDate::from_ymd_opt(2026, 1, 2)
+            .expect("valid date")
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("valid time"));
+
+        let params =
+            build_candles_params("FB.US", start, end, 86_400, -1).expect("valid candle payload");
+
+        assert_eq!(params.get("id").and_then(|v| v.as_str()), Some("FB.US"));
+        assert_eq!(params.get("count").and_then(|v| v.as_i64()), Some(-1));
+        assert_eq!(params.get("timeframe").and_then(|v| v.as_i64()), Some(1440));
+        assert_eq!(
+            params.get("intervalMode").and_then(|v| v.as_str()),
+            Some("ClosedRay")
+        );
+        assert_eq!(
+            params.get("date_from").and_then(|v| v.as_str()),
+            Some("01.01.2026 00:00")
+        );
+        assert_eq!(
+            params.get("date_to").and_then(|v| v.as_str()),
+            Some("02.01.2026 00:00")
+        );
+    }
+
+    #[test]
+    fn build_candles_params_rejects_invalid_timeframe() {
+        let start = NaiveDate::from_ymd_opt(2026, 1, 1)
+            .expect("valid date")
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("valid time"));
+        let end = NaiveDate::from_ymd_opt(2026, 1, 2)
+            .expect("valid date")
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("valid time"));
+
+        let error =
+            build_candles_params("FB.US", start, end, 120, -1).expect_err("2 minutes unsupported");
+        assert!(error.to_string().contains("unsupported timeframe"));
+    }
+
+    #[test]
+    fn build_candles_params_rejects_non_negative_count() {
+        let start = NaiveDate::from_ymd_opt(2026, 1, 1)
+            .expect("valid date")
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("valid time"));
+        let end = NaiveDate::from_ymd_opt(2026, 1, 2)
+            .expect("valid date")
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).expect("valid time"));
+
+        let error =
+            build_candles_params("FB.US", start, end, 60, 0).expect_err("count must be negative");
+        assert!(error.to_string().contains("count must be negative"));
+    }
 }

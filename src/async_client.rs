@@ -1,3 +1,4 @@
+use crate::candles::{CandlesResponse, parse_candles_response};
 use crate::common::client_helpers;
 use crate::core::{AsyncCore, Core};
 use crate::errors::TradernetError;
@@ -233,28 +234,54 @@ impl AsyncTradernet {
         end: NaiveDateTime,
         timeframe_seconds: i64,
     ) -> Result<Value, TradernetError> {
-        let mut params = Map::new();
-        params.insert("id".to_string(), Value::String(symbol.to_string()));
-        params.insert("count".to_string(), Value::Number((-1).into()));
-        params.insert(
-            "timeframe".to_string(),
-            Value::Number((timeframe_seconds / 60).into()),
-        );
-        params.insert(
-            "date_from".to_string(),
-            Value::String(start.format("%d.%m.%Y %H:%M").to_string()),
-        );
-        params.insert(
-            "date_to".to_string(),
-            Value::String(end.format("%d.%m.%Y %H:%M").to_string()),
-        );
-        params.insert(
-            "intervalMode".to_string(),
-            Value::String("OpenRay".to_string()),
-        );
+        self.get_candles_with_count(symbol, start, end, timeframe_seconds, -1)
+            .await
+    }
+
+    /// Returns candles for a symbol with explicit `count`.
+    ///
+    /// `count` must be negative: `-1` means no extra candles outside the requested interval,
+    /// `-100` means include 100 candles before `date_from`.
+    pub async fn get_candles_with_count(
+        &self,
+        symbol: &str,
+        start: NaiveDateTime,
+        end: NaiveDateTime,
+        timeframe_seconds: i64,
+        count: i64,
+    ) -> Result<Value, TradernetError> {
+        let params =
+            client_helpers::build_candles_params(symbol, start, end, timeframe_seconds, count)?;
         self.core
             .authorized_request("getHloc", Some(params), Some(2))
             .await
+    }
+
+    /// Returns typed candles for a symbol.
+    pub async fn get_candles_typed(
+        &self,
+        symbol: &str,
+        start: NaiveDateTime,
+        end: NaiveDateTime,
+        timeframe_seconds: i64,
+    ) -> Result<CandlesResponse, TradernetError> {
+        self.get_candles_with_count_typed(symbol, start, end, timeframe_seconds, -1)
+            .await
+    }
+
+    /// Returns typed candles for a symbol with explicit `count`.
+    pub async fn get_candles_with_count_typed(
+        &self,
+        symbol: &str,
+        start: NaiveDateTime,
+        end: NaiveDateTime,
+        timeframe_seconds: i64,
+        count: i64,
+    ) -> Result<CandlesResponse, TradernetError> {
+        let response = self
+            .get_candles_with_count(symbol, start, end, timeframe_seconds, count)
+            .await?;
+        parse_candles_response(response)
     }
 
     /// Returns quote data for a list of symbols.

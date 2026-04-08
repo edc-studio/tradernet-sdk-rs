@@ -19,6 +19,8 @@
 
 /// Async REST API client built on top of [`Tradernet`].
 pub mod async_client;
+/// Typed responses for getHloc candles endpoint.
+pub mod candles;
 /// REST API client built on top of [`Core`].
 pub mod client;
 /// Common networking and string helpers.
@@ -37,6 +39,10 @@ pub mod ws;
 pub mod ws_types;
 
 pub use crate::async_client::AsyncTradernet;
+pub use crate::candles::{
+    CandleInfo, CandleOhlc, CandlesApiError, CandlesResponse, parse_candles_api_error,
+    parse_candles_response,
+};
 pub use crate::client::Tradernet;
 pub use crate::core::{Core, WsCredentials};
 pub use crate::errors::TradernetError;

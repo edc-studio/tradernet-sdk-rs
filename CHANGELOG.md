@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-05-28
+
+### Added
+
+- Typed `getTradesHistory` responses and support across sync and async clients.
+- `get_candles_series` methods with normalized candle series support for sync and async clients.
+- New `candles` module with typed responses and helpers for the `getHloc` endpoint.
+
 ## [0.2.0] - 2026-03-26
 
 ### Breaking Changes
@@ -58,4 +66,3 @@ All notable changes to this project will be documented in this file.
   - `TradernetWebsocket::new(public, private)`.
 - Update WebSocket stream handling to match typed enums instead of raw JSON.
 - For multiple subscriptions over one socket, switch to `connect()` + `TradernetWsSession`.
-
